@@ -1,0 +1,20 @@
+[package]
+name = "petricheck"
+version = "0.0.1"
+authors = ["Erwan Mahe"]
+edition = "2024"
+
+license = "Apache-2.0"
+description = "A simple symbolic model checker for Petri Nets"
+
+[dependencies]
+xml                  = "0.8.20"
+log                  = "0.4"
+thiserror            = "2"
+map-macro            = "0.3.0"
+graphviz_dot_builder = "0.1.5"
+itertools            = "0.14.0"
+nom                  = "8.0.0"
+citreelo             = "0.1.0"
+
+
