@@ -14,15 +14,19 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-use citreelo::util::viz_kripke::KripkeStructureGraphvizDrawer;
 use itertools::Itertools;
 
-use crate::{model_checking::state::PetriKripkeState, util::context::PetriNetContext};
+use crate::model_checking::state::PetriKripkeState;
 
 
 
 
-impl KripkeStructureGraphvizDrawer<PetriKripkeState> for PetriNetContext {
+pub trait PetriKripkeVisualizer {
+
+    fn get_transition_label_from_label_id(&self, lab_id : usize) -> &str;
+
+    fn get_place_label(&self, place_id : usize) -> &str;
+
     fn get_doap_label(&self,doap : &PetriKripkeState) -> String {
         let toks_str = doap.marking.tokens.iter().enumerate()
         .filter(|(_,y)| **y>0)
@@ -37,6 +41,5 @@ impl KripkeStructureGraphvizDrawer<PetriKripkeState> for PetriNetContext {
             }
         }
     }
+
 }
-
-

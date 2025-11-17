@@ -14,6 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+use citreelo::util::viz_kripke::KripkeStructureGraphvizDrawer;
+
+use crate::{model_checking::state::PetriKripkeState, util::vizualisation::{kripke_viz::PetriKripkeVisualizer, petri_viz::PetriNetVisualizer}};
+
 
 
 pub struct PetriNetContext {
@@ -44,3 +48,28 @@ impl PetriNetContext {
     }
 }
 
+impl PetriNetVisualizer for PetriNetContext {
+    fn get_transition_label_from_transition_id(&self, tr_id : usize) -> &str {
+        self.get_transition_label_from_transition_id(tr_id)
+    }
+
+    fn get_place_label(&self, place_id : usize) -> &str {
+        self.get_place_label(place_id)
+    }
+}
+
+impl PetriKripkeVisualizer for PetriNetContext {
+    fn get_transition_label_from_label_id(&self, lab_id : usize) -> &str {
+        self.get_transition_label_from_label_id(lab_id)
+    }
+
+    fn get_place_label(&self, place_id : usize) -> &str {
+        self.get_place_label(place_id)
+    }
+}
+
+impl KripkeStructureGraphvizDrawer<PetriKripkeState> for PetriNetContext {
+    fn get_doap_label(&self,doap : &PetriKripkeState) -> String {
+        PetriKripkeVisualizer::get_doap_label(self,doap)
+    }
+}

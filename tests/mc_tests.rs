@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-use petricheck::{model::{marking::Marking, net::PetriNet, transition::PetriTransition}, model_checking::to_kripke::{DefaultPetriKripkeStateProducer, petri_to_kripke}, util::{context::PetriNetContext, parse_ctl::parser::BuiltinPetriCtlParser, vizualisation::petri_viz::petri_repr}};
+use petricheck::{model::{marking::Marking, net::PetriNet, transition::PetriTransition}, model_checking::to_kripke::{DefaultPetriKripkeStateProducer, petri_to_kripke}, util::{context::PetriNetContext, parse_ctl::parser::BuiltinPetriCtlParser, vizualisation::petri_viz::PetriNetVisualizer}};
 use graphviz_dot_builder::traits::{DotPrintable, GraphVizOutputFormat};
 use map_macro::{hash_map, hash_set};
 
@@ -57,7 +57,7 @@ pub fn test_simple_example() {
         ]
     );
     {
-        let gv = petri_repr(&context,&petri_net,Some(&initial_marking));
+        let gv = context.petri_repr(&petri_net,Some(&initial_marking));
         gv.print_dot(&[".".to_string()], "lock_petri", &GraphVizOutputFormat::png).unwrap();
     }
     // ***

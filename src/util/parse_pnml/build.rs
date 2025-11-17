@@ -54,7 +54,7 @@ pub fn read_petri_net_from_pnml_file_path(path : &str) -> Result<PnmlFileContent
 
 
 // Read PNML content and return the Petri Net
-pub fn read_pnml<R: BufRead>(mut reader: EventReader<R>) -> Result<PnmlFileContent, PnmlParsingError> {
+fn read_pnml<R: BufRead>(mut reader: EventReader<R>) -> Result<PnmlFileContent, PnmlParsingError> {
     loop {
         match reader.next() {
             Ok(XmlEvent::StartElement{name,attributes,namespace}) => {
@@ -76,7 +76,7 @@ pub fn read_pnml<R: BufRead>(mut reader: EventReader<R>) -> Result<PnmlFileConte
 
 
 // Read PNML content and return the Petri Net
-pub fn read_pnml_content<R: BufRead>(reader: EventReader<R>) -> Result<PnmlFileContent, PnmlParsingError> {
+fn read_pnml_content<R: BufRead>(reader: EventReader<R>) -> Result<PnmlFileContent, PnmlParsingError> {
     let first_pass_result = read_pnml_first_pass(reader)?;
     // ***
     let mut transitions = Vec::new();

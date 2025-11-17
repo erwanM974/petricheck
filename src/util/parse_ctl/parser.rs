@@ -25,10 +25,10 @@ use crate::{model::{net::PetriNet}, model_checking::props::{BuiltinPetriAtomicPr
 
 pub struct BuiltinPetriCtlParser {
     /// for each place name maps to its index in the PetriNet object
-    pub(crate) place_name_to_index : HashMap<String,usize>,
+    pub place_name_to_index : HashMap<String,usize>,
 
     /// for each transition label maps to the index representing that label
-    pub(crate) transition_label_to_label_id : HashMap<String,usize>,
+    pub transition_label_to_label_id : HashMap<String,usize>,
 
     /// for each transition label
     /// the firing condition of a transition with that label 
@@ -40,7 +40,7 @@ pub struct BuiltinPetriCtlParser {
     ///                 tokens-count(place) >= requirement  
     ///             )
     ///     )
-    pub(crate) transition_label_to_firing_condition : HashMap<String,CTLFormula<BuiltinPetriAtomicProposition>>
+    pub transition_label_to_firing_condition : HashMap<String,CTLFormula<BuiltinPetriAtomicProposition>>
 }
 
 
