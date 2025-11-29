@@ -19,7 +19,7 @@ use crate::model::transition::PetriTransition;
 
 
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct PetriNet {
     pub num_places  : usize,
     pub transitions : Vec<PetriTransition> 
@@ -28,5 +28,17 @@ pub struct PetriNet {
 impl PetriNet {
     pub fn new(num_places: usize, transitions: Vec<PetriTransition>) -> Self {
         Self { num_places, transitions }
+    }
+
+    pub fn add_place(&mut self) -> usize {
+        let state_id = self.num_places;
+        self.num_places +=1;
+        state_id
+    }
+
+    pub fn add_transition(&mut self, transition : PetriTransition) -> usize {
+        let tr_id = self.transitions.len();
+        self.transitions.push(transition);
+        tr_id
     }
 }

@@ -34,36 +34,36 @@ impl PetriNetContext {
         Self { places_names, transitions_label_ids, transition_labels }
     }
 
-    pub fn get_transition_label_from_transition_id(&self, tr_id : usize) -> &str {
-        let lab_id = self.transitions_label_ids.get(tr_id).unwrap();
+    pub fn get_transition_label_from_transition_id(&self, tr_id : &usize) -> &str {
+        let lab_id = self.transitions_label_ids.get(*tr_id).unwrap();
         self.transition_labels.get(*lab_id).unwrap()
     }
 
-    pub fn get_transition_label_from_label_id(&self, lab_id : usize) -> &str {
-        self.transition_labels.get(lab_id).unwrap()
+    pub fn get_transition_label_from_label_id(&self, lab_id : &usize) -> &str {
+        self.transition_labels.get(*lab_id).unwrap()
     }
 
-    pub fn get_place_label(&self, place_id : usize) -> &str {
-        self.places_names.get(place_id).unwrap()
+    pub fn get_place_label(&self, place_id : &usize) -> &str {
+        self.places_names.get(*place_id).unwrap()
     }
 }
 
 impl PetriNetVisualizer for PetriNetContext {
-    fn get_transition_label_from_transition_id(&self, tr_id : usize) -> &str {
+    fn get_transition_label_from_transition_id(&self, tr_id : &usize) -> &str {
         self.get_transition_label_from_transition_id(tr_id)
     }
 
-    fn get_place_label(&self, place_id : usize) -> &str {
+    fn get_place_label(&self, place_id : &usize) -> &str {
         self.get_place_label(place_id)
     }
 }
 
 impl PetriKripkeVisualizer for PetriNetContext {
-    fn get_transition_label_from_label_id(&self, lab_id : usize) -> &str {
+    fn get_transition_label_from_label_id(&self, lab_id : &usize) -> &str {
         self.get_transition_label_from_label_id(lab_id)
     }
 
-    fn get_place_label(&self, place_id : usize) -> &str {
+    fn get_place_label(&self, place_id : &usize) -> &str {
         self.get_place_label(place_id)
     }
 }

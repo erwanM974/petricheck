@@ -16,7 +16,7 @@ limitations under the License.
 
 use petricheck::{model::{marking::Marking, net::PetriNet, transition::PetriTransition}, model_checking::to_kripke::{DefaultPetriKripkeStateProducer, petri_to_kripke}, util::{context::PetriNetContext, parse_ctl::parser::BuiltinPetriCtlParser, vizualisation::petri_viz::PetriNetVisualizer}};
 use graphviz_dot_builder::traits::{DotPrintable, GraphVizOutputFormat};
-use map_macro::{hash_map, hash_set};
+use map_macro::{btree_map, hash_map, hash_set};
 
 use citreelo::util::viz_kripke::KripkeStructureGraphvizDrawer;
 
@@ -29,13 +29,25 @@ pub fn test_simple_example() {
     let petri_net = PetriNet::new(
         5, 
         vec![
-            PetriTransition::new(Marking::new(vec![1,0,1,0,0]), Marking::new(vec![0,1,0,0,0])),
-            PetriTransition::new(Marking::new(vec![0,0,1,1,0]), Marking::new(vec![0,0,0,0,1])),
-            PetriTransition::new(Marking::new(vec![0,1,0,0,0]), Marking::new(vec![1,0,1,0,0])),
-            PetriTransition::new(Marking::new(vec![0,0,0,0,1]), Marking::new(vec![0,0,1,1,0])),
+            PetriTransition::new(
+                hash_map! {0=>1,2=>1},
+                hash_map! {1=>1}
+            ),
+            PetriTransition::new(
+                hash_map! {3=>1,2=>1},
+                hash_map! {4=>1}
+            ),
+            PetriTransition::new(
+                hash_map! {1=>1},
+                hash_map! {0=>1,2=>1}
+            ),
+            PetriTransition::new(
+                hash_map! {4=>1},
+                hash_map! {3=>1,2=>1}
+            )
         ]
     );
-    let initial_marking = Marking::new(vec![1,0,1,1,0]);
+    let initial_marking = Marking::new(btree_map! {0=>1,2=>1,3=>1});
     // ***
     let context = PetriNetContext::new(
         vec![

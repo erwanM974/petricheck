@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
 use std::io::BufRead;
 
 use xml::attribute::OwnedAttribute;
@@ -28,13 +28,13 @@ use crate::util::parse_pnml::syntax::*;
 pub struct PnmlParsingFirstPass {
     pub number_of_places : usize,
     pub place_text_id_to_int_id : HashMap<String,usize>,
-    pub initial_marking : Vec<u32>,
+    pub initial_marking : BTreeMap<usize,u32>,
     pub transitions_text_ids : HashSet<String>,
     pub raw_arcs : Vec<(String,String)>
 }
 
 impl PnmlParsingFirstPass {
-    fn new(number_of_places: usize, place_text_id_to_int_id: HashMap<String,usize>, initial_marking: Vec<u32>, transitions_text_ids: HashSet<String>, raw_arcs: Vec<(String,String)>) -> Self {
+    fn new(number_of_places: usize, place_text_id_to_int_id: HashMap<String,usize>, initial_marking: BTreeMap<usize,u32>, transitions_text_ids: HashSet<String>, raw_arcs: Vec<(String,String)>) -> Self {
         Self { number_of_places, place_text_id_to_int_id, initial_marking, transitions_text_ids, raw_arcs }
     }
 }
@@ -43,7 +43,7 @@ impl PnmlParsingFirstPass {
 pub fn read_pnml_first_pass<R: BufRead>(mut reader: EventReader<R>) -> Result<PnmlParsingFirstPass, PnmlParsingError> {
     let mut next_place = 0;
     let mut place_text_id_to_int_id : HashMap<String,usize> = HashMap::new();
-    let mut initial_marking : Vec<u32> = Vec::new();
+    let mut initial_marking : BTreeMap<usize,u32> = BTreeMap::new();
     let mut transitions_text_ids : HashSet<String> = HashSet::new();
     let mut raw_arcs : Vec<(String,String)> = Vec::new();
     loop {
@@ -56,9 +56,7 @@ pub fn read_pnml_first_pass<R: BufRead>(mut reader: EventReader<R>) -> Result<Pn
                     next_place +=1;
                     place_text_id_to_int_id.insert(id, place_int_id);
                     if let Some(init_num_tokens_at_place) = opt_init_mark {
-                        initial_marking.push(init_num_tokens_at_place);
-                    } else {
-                        initial_marking.push(0);
+                        initial_marking.insert(place_int_id,init_num_tokens_at_place);
                     }
                 },
                 PNML_TRANSITION => {

@@ -31,7 +31,10 @@ impl TokensCountAtom {
         match self {
             TokensCountAtom::RawInteger(raw_int) => {*raw_int},
             TokensCountAtom::NumberOfTokensInPlace(place_id) => {
-                *marking.tokens.get(*place_id).unwrap()
+                match marking.get_num_toks_at_place(place_id) {
+                    Some(toks) => {*toks},
+                    None => {0}
+                }
             },
         }
     }

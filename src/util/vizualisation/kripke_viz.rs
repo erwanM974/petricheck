@@ -23,18 +23,18 @@ use crate::model_checking::state::PetriKripkeState;
 
 pub trait PetriKripkeVisualizer {
 
-    fn get_transition_label_from_label_id(&self, lab_id : usize) -> &str;
+    fn get_transition_label_from_label_id(&self, lab_id : &usize) -> &str;
 
-    fn get_place_label(&self, place_id : usize) -> &str;
+    fn get_place_label(&self, place_id : &usize) -> &str;
 
     fn get_doap_label(&self,doap : &PetriKripkeState) -> String {
-        let toks_str = doap.marking.tokens.iter().enumerate()
+        let toks_str = doap.marking.iter_tokens()
         .filter(|(_,y)| **y>0)
-        .map(|(place_id,num_toks)| format!("@({}:{}",self.get_place_label(place_id),num_toks))
+        .map(|(place_id,num_toks)| format!("@({}:{})",self.get_place_label(place_id),num_toks))
         .join("\n");
         match &doap.previous_transition_label_id {
             Some(lab_id) => {
-                format!("{}\nprev:{}",toks_str,self.get_transition_label_from_label_id(*lab_id))
+                format!("{}\nprev:{}",toks_str,self.get_transition_label_from_label_id(lab_id))
             },
             None => {
                 toks_str

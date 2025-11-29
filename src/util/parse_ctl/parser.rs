@@ -75,23 +75,22 @@ impl BuiltinPetriCtlParser {
             let transition = petri_net.transitions.get(tr_id).unwrap();
             let tr_firing_condition = {
                 let mut ctl = CTLFormula::Leaf(CTLFormulaLeaf::True);
-                for (place_id,req_num_toks) in transition.preset_tokens.tokens.iter().enumerate() {
-                    if *req_num_toks > 0 {
-                        let atom = BuiltinPetriAtomicProposition::TokensCount(
-                            TokensCountRelation::GreaterOrEqual, 
-                            TokensCountAtom::NumberOfTokensInPlace(place_id), 
-                            TokensCountAtom::RawInteger(*req_num_toks)
-                        );
-                        ctl = CTLFormula::Binary(
-                            BinaryCTLOperator::And, 
-                            Box::new(ctl), 
-                            Box::new(CTLFormula::Leaf(CTLFormulaLeaf::AtomicProp(atom)))
-                        );
-                    }
+                for (place_id,req_num_toks) in transition.iter_preset_tokens() {
+                    debug_assert!(*req_num_toks > 0);
+                    let atom = BuiltinPetriAtomicProposition::TokensCount(
+                        TokensCountRelation::GreaterOrEqual, 
+                        TokensCountAtom::NumberOfTokensInPlace(*place_id), 
+                        TokensCountAtom::RawInteger(*req_num_toks)
+                    );
+                    ctl = CTLFormula::Binary(
+                        BinaryCTLOperator::And, 
+                        Box::new(ctl), 
+                        Box::new(CTLFormula::Leaf(CTLFormulaLeaf::AtomicProp(atom)))
+                    );
                 }
                 ctl
             };
-            let tr_label = context.get_transition_label_from_label_id(*tr_label_id);
+            let tr_label = context.get_transition_label_from_label_id(tr_label_id);
             // ***
             if let Some(ctl) = transition_label_to_firing_condition.remove(tr_label) {
                 transition_label_to_firing_condition.insert(

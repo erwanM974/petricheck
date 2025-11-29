@@ -14,21 +14,25 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+use std::collections::BTreeMap;
 
-#[derive(Debug, PartialEq, Eq, Clone, PartialOrd, Ord, Hash)]
+
+#[derive(Debug, PartialEq, Eq, Clone, Hash)]
 pub struct Marking {
-    // place id (index in the vec) to number of tokens
-    pub tokens : Vec<u32>
+    // place id to number of tokens
+    // use BTreeMap so one can derive the Hash of Marking
+    tokens : BTreeMap<usize,u32>
 }
 
 impl Marking {
-    pub fn new(tokens: Vec<u32>) -> Self {
+    pub fn new(tokens: BTreeMap<usize,u32>) -> Self {
         Self { tokens }
     }
-    pub fn new_empty(num_places : usize) -> Self {
-        Self::new(
-            vec![0; num_places]
-        )
+    pub fn get_num_toks_at_place(&self, place_id : &usize) -> Option<&u32> {
+        self.tokens.get(place_id)
+    }
+    pub fn iter_tokens(&self) -> impl Iterator<Item=(&usize,&u32)> {
+        self.tokens.iter()
     }
 }
 

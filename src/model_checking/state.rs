@@ -20,7 +20,7 @@ use crate::model::marking::Marking;
 
 
 
-#[derive(Debug, PartialEq, Eq, Clone, PartialOrd, Ord, Hash)]
+#[derive(Debug, PartialEq, Eq, Clone, Hash)]
 pub struct PetriKripkeState {
     pub marking : Marking,
     pub previous_transition_label_id : Option<usize>

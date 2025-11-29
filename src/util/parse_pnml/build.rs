@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-use std::{collections::{HashMap}, fs::File, io::{BufRead, BufReader}};
+use std::{collections::HashMap, fs::File, io::{BufRead, BufReader}};
 
 use xml::{reader::XmlEvent, EventReader};
 
@@ -84,16 +84,16 @@ fn read_pnml_content<R: BufRead>(reader: EventReader<R>) -> Result<PnmlFileConte
         let mut transitions_incoming = HashMap::new();
         let mut transitions_outgoing = HashMap::new();
         for tr in &first_pass_result.transitions_text_ids {
-            transitions_incoming.insert(tr.clone(), Marking::new_empty(first_pass_result.number_of_places));
-            transitions_outgoing.insert(tr.clone(), Marking::new_empty(first_pass_result.number_of_places));
+            transitions_incoming.insert(tr.clone(), HashMap::new());
+            transitions_outgoing.insert(tr.clone(), HashMap::new());
         }
         for (source_id,target_id) in first_pass_result.raw_arcs {
             if let Some(source_place_id) = first_pass_result.place_text_id_to_int_id.get(&source_id) {
                 let tx_incoming_places = transitions_incoming.get_mut(&target_id).ok_or(PnmlParsingError::UnknownTransition)?;
-                *tx_incoming_places.tokens.get_mut(*source_place_id).unwrap() += 1;
+                *tx_incoming_places.get_mut(source_place_id).unwrap() += 1;
             } else if let Some(target_place_id) = first_pass_result.place_text_id_to_int_id.get(&target_id) {
                 let tx_outgoing_places = transitions_outgoing.get_mut(&source_id).ok_or(PnmlParsingError::UnknownTransition)?;
-                *tx_outgoing_places.tokens.get_mut(*target_place_id).unwrap() += 1;
+                *tx_outgoing_places.get_mut(target_place_id).unwrap() += 1;
             } else {
                 return Err(PnmlParsingError::NeitherSourceNotTargetOfArcIsAPlace)
             }
