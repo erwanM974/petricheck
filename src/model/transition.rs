@@ -14,22 +14,27 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-use std::collections::{BTreeMap, HashMap};
+use std::{collections::{BTreeMap, HashMap}, rc::Rc};
 
-use crate::model::marking::Marking;
+use crate::model::{label::PetriTransitionLabel, marking::Marking};
 
 
 
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct PetriTransition {
-    preset_tokens : HashMap<usize,u32>,
-    postset_tokens : HashMap<usize,u32>,
+    pub transition_label : Option<Rc<PetriTransitionLabel>>,
+    preset_tokens    : HashMap<usize,u32>,
+    postset_tokens   : HashMap<usize,u32>,
 }
 
 impl PetriTransition {
-    pub fn new(preset_tokens: HashMap<usize,u32>, postset_tokens: HashMap<usize,u32>) -> Self {
-        Self { preset_tokens, postset_tokens }
+    pub fn new(
+        transition_label : Option<Rc<PetriTransitionLabel>>,
+        preset_tokens: HashMap<usize,u32>, 
+        postset_tokens: HashMap<usize,u32>
+    ) -> Self {
+        Self { transition_label, preset_tokens, postset_tokens }
     }
 
     pub fn number_of_preset_places(&self) -> usize {

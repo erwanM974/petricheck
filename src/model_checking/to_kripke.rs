@@ -15,14 +15,12 @@ limitations under the License.
 */
 
 
-
-
-
-use std::collections::HashMap;
+use std::collections::{HashSet};
 
 use citreelo::kripke::{KripkeState, KripkeStructure};
 use map_macro::hash_map;
 
+use crate::model::label::PetriTransitionLabel;
 use crate::model::marking::Marking;
 use crate::model::net::PetriNet;
 use crate::model::transition::PetriTransition;
@@ -30,43 +28,35 @@ use crate::model_checking::state::PetriKripkeState;
 
 
 
-
-pub trait PetriKripkeStateProducer {
-    fn try_reach_new_state(
-        &self,
-        net_place_num : usize,
-        initial : &PetriKripkeState, 
-        transition_id : usize,
-        transition : &PetriTransition
-    ) -> Option<PetriKripkeState>;
+pub struct PetriKripkeStateProducer {
+    tagged_transition_labels : HashSet<PetriTransitionLabel>
 }
 
-
-
-pub struct DefaultPetriKripkeStateProducer {
-    transition_id_to_label_id : HashMap<usize,usize>
-}
-
-impl DefaultPetriKripkeStateProducer {
-    pub fn new(transition_id_to_label_id: HashMap<usize,usize>) -> Self {
-        Self { transition_id_to_label_id }
+impl PetriKripkeStateProducer {
+    pub fn new(tagged_transition_labels: HashSet<PetriTransitionLabel>) -> Self {
+        Self { tagged_transition_labels }
     }
-}
 
 
-impl PetriKripkeStateProducer for DefaultPetriKripkeStateProducer 
-    {
-    fn try_reach_new_state(
+    pub fn try_reach_new_state(
         &self,
         net_place_num : usize,
-        initial : &PetriKripkeState, 
-        transition_id : usize,
+        initial : &PetriKripkeState,
         transition : &PetriTransition
     ) -> Option<PetriKripkeState> {
         if let Some(new_marking) = transition.try_fire(net_place_num, &initial.marking) {
-            let label_id = self.transition_id_to_label_id.get(&transition_id).copied();
+            let previous_transition_tag_id = match &transition.transition_label {
+                None => {None},
+                Some(lab_ref) => {
+                    if self.tagged_transition_labels.contains(&lab_ref) {
+                        Some(lab_ref.clone())
+                    } else {
+                        None
+                    }
+                }
+            };
             Some(
-                PetriKripkeState::new(new_marking, label_id)
+                PetriKripkeState::new(new_marking, previous_transition_tag_id)
             )
         } else {
             None 
@@ -74,13 +64,10 @@ impl PetriKripkeStateProducer for DefaultPetriKripkeStateProducer
     }
 }
 
-
-pub fn petri_to_kripke<
-    StateProducer : PetriKripkeStateProducer
->(
+pub fn petri_to_kripke(
     petri : &PetriNet, 
     initial_marking : Marking,
-    state_producer : StateProducer
+    state_producer : &PetriKripkeStateProducer
 ) -> KripkeStructure<PetriKripkeState> {
     let (mut states, mut states_map, mut queue) = {
         let initial_state = PetriKripkeState::new(initial_marking.clone(), None);
@@ -93,13 +80,13 @@ pub fn petri_to_kripke<
         let queue = vec![initial_state];
         (states,states_map,queue)
     };
+    let net_num_places = petri.places.len();
     while let Some(origin_state) = queue.pop() {
         let origin_state_id = *states_map.get(&origin_state).unwrap();
-        for (transition_id,transition) in petri.transitions.iter().enumerate() {
+        for transition in petri.transitions.iter(){
             if let Some(target_state) = state_producer.try_reach_new_state(
-                petri.num_places, 
+                net_num_places, 
                 &origin_state, 
-                transition_id,
                 transition
             ) {
                 let target_state_id = match states_map.get(&target_state) {

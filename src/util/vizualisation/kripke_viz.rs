@@ -14,32 +14,47 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+use citreelo::util::viz_kripke::KripkeStructureGraphvizDrawer;
 use itertools::Itertools;
 
-use crate::model_checking::state::PetriKripkeState;
+use crate::{model::net::PetriNet, model_checking::state::PetriKripkeState};
 
 
 
+pub struct PetriKripkeVisualizer<'a> {
+    net : &'a PetriNet
+}
 
-pub trait PetriKripkeVisualizer {
+impl<'a> PetriKripkeVisualizer<'a> {
+    pub fn new(net: &'a PetriNet) -> Self {
+        Self { net }
+    }
+}
 
-    fn get_transition_label_from_label_id(&self, lab_id : &usize) -> &str;
 
-    fn get_place_label(&self, place_id : &usize) -> &str;
-
+impl<'a> KripkeStructureGraphvizDrawer<PetriKripkeState> for PetriKripkeVisualizer<'a> {
     fn get_doap_label(&self,doap : &PetriKripkeState) -> String {
         let toks_str = doap.marking.iter_tokens()
         .filter(|(_,y)| **y>0)
-        .map(|(place_id,num_toks)| format!("@({}:{})",self.get_place_label(place_id),num_toks))
+        .map(
+            |(place_id,num_toks)| {
+                let place = self.net.places.get(*place_id).unwrap();
+                if let Some(place_label) = place {
+                    format!("@p{}({:}):{}",place_id,place_label,num_toks)
+                } else {
+                    format!("@p{}:{}",place_id,num_toks)
+                }
+            }
+        )
         .join("\n");
-        match &doap.previous_transition_label_id {
-            Some(lab_id) => {
-                format!("{}\nprev:{}",toks_str,self.get_transition_label_from_label_id(lab_id))
+        match &doap.previous_tagged_transition_label {
+            Some(previous_transition_label) => {
+                format!("{}\nprev:{}",toks_str,previous_transition_label)
             },
             None => {
                 toks_str
             }
         }
     }
-
 }
+

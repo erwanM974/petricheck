@@ -14,9 +14,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+use std::rc::Rc;
+
 use citreelo::kripke::AtomicProposition;
 
-use crate::{model::marking::Marking, model_checking::state::PetriKripkeState};
+use crate::{model::{label::PetriTransitionLabel, marking::Marking}, model_checking::state::PetriKripkeState};
 
 
 
@@ -64,7 +66,7 @@ impl TokensCountRelation {
 #[derive(Debug, PartialEq, Eq, Clone, PartialOrd, Ord, Hash)]
 pub enum BuiltinPetriAtomicProposition {
     TokensCount(TokensCountRelation, TokensCountAtom, TokensCountAtom),
-    PreviousTransitionLabelIdMustBe(usize)
+    PreviousTransitionLabelMustBe(Rc<PetriTransitionLabel>)
 }
 
 
@@ -77,9 +79,9 @@ impl AtomicProposition<PetriKripkeState> for BuiltinPetriAtomicProposition {
                 let right_int = right.interpret_as_u32(&state_domain.marking);
                 rel.eval(left_int,right_int)
             },
-            BuiltinPetriAtomicProposition::PreviousTransitionLabelIdMustBe(lab_id) => {
-                match &state_domain.previous_transition_label_id {
-                    Some(got_lab_id) => got_lab_id == lab_id,
+            BuiltinPetriAtomicProposition::PreviousTransitionLabelMustBe(transition_label) => {
+                match &state_domain.previous_tagged_transition_label {
+                    Some(previous_transition_label) => previous_transition_label == transition_label,
                     None => false,
                 }
             },

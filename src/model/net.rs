@@ -14,25 +14,31 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-use crate::model::transition::PetriTransition;
+use std::rc::Rc;
+
+use crate::model::{label::PetriStateLabel, transition::PetriTransition};
 
 
 
 
 #[derive(Debug, Clone)]
 pub struct PetriNet {
-    pub num_places  : usize,
+    pub places      : Vec<Option<Rc<PetriStateLabel>>>,
     pub transitions : Vec<PetriTransition> 
 }
 
 impl PetriNet {
-    pub fn new(num_places: usize, transitions: Vec<PetriTransition>) -> Self {
-        Self { num_places, transitions }
+    pub fn new(places: Vec<Option<Rc<PetriStateLabel>>>, transitions: Vec<PetriTransition>) -> Self {
+        Self { places, transitions }
+    }
+    
+    pub fn new_empty() -> Self {
+        Self { places:Vec::new(), transitions:Vec::new() }
     }
 
-    pub fn add_place(&mut self) -> usize {
-        let state_id = self.num_places;
-        self.num_places +=1;
+    pub fn add_place(&mut self, place_label : Option<Rc<PetriStateLabel>>) -> usize {
+        let state_id = self.places.len();
+        self.places.push(place_label);
         state_id
     }
 

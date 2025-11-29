@@ -184,9 +184,9 @@ impl BuiltinPetriCtlParser {
         );
         match parser.parse(input) {
             Ok((rem,tr_lab)) => {
-                match self.transition_label_to_label_id.get(&tr_lab) {
+                match self.transition_label_to_ref.get(&tr_lab) {
                     Some(label_id) => {
-                        let prop = BuiltinPetriAtomicProposition::PreviousTransitionLabelIdMustBe(*label_id);
+                        let prop = BuiltinPetriAtomicProposition::PreviousTransitionLabelMustBe(label_id.clone());
                         Ok((rem,prop))
                     },
                     None => {

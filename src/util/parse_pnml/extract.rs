@@ -26,7 +26,7 @@ use crate::util::parse_pnml::syntax::*;
 
 
 pub struct PnmlParsingFirstPass {
-    pub number_of_places : usize,
+    pub places : Vec<String>,
     pub place_text_id_to_int_id : HashMap<String,usize>,
     pub initial_marking : BTreeMap<usize,u32>,
     pub transitions_text_ids : HashSet<String>,
@@ -34,15 +34,17 @@ pub struct PnmlParsingFirstPass {
 }
 
 impl PnmlParsingFirstPass {
-    fn new(number_of_places: usize, place_text_id_to_int_id: HashMap<String,usize>, initial_marking: BTreeMap<usize,u32>, transitions_text_ids: HashSet<String>, raw_arcs: Vec<(String,String)>) -> Self {
-        Self { number_of_places, place_text_id_to_int_id, initial_marking, transitions_text_ids, raw_arcs }
+    pub fn new(places: Vec<String>, place_text_id_to_int_id: HashMap<String,usize>, initial_marking: BTreeMap<usize,u32>, transitions_text_ids: HashSet<String>, raw_arcs: Vec<(String,String)>) -> Self {
+        Self { places, place_text_id_to_int_id, initial_marking, transitions_text_ids, raw_arcs }
     }
 }
 
 
+
+
 pub fn read_pnml_first_pass<R: BufRead>(mut reader: EventReader<R>) -> Result<PnmlParsingFirstPass, PnmlParsingError> {
-    let mut next_place = 0;
-    let mut place_text_id_to_int_id : HashMap<String,usize> = HashMap::new();
+    let mut places = Vec::new();
+    let mut place_text_id_to_int_id = HashMap::new();
     let mut initial_marking : BTreeMap<usize,u32> = BTreeMap::new();
     let mut transitions_text_ids : HashSet<String> = HashSet::new();
     let mut raw_arcs : Vec<(String,String)> = Vec::new();
@@ -51,10 +53,10 @@ pub fn read_pnml_first_pass<R: BufRead>(mut reader: EventReader<R>) -> Result<Pn
             Ok(XmlEvent::StartElement{name,attributes,..}) => match name.local_name.as_str() {
                 PNML_PLACE => {
                     let attrs = collect_attributes(attributes);
-                    let (id,opt_init_mark) = read_place(&mut reader, attrs)?;
-                    let place_int_id = next_place;
-                    next_place +=1;
-                    place_text_id_to_int_id.insert(id, place_int_id);
+                    let (place_name,opt_init_mark) = read_place(&mut reader, attrs)?;
+                    let place_int_id = places.len();
+                    place_text_id_to_int_id.insert(place_name.clone(),place_int_id);
+                    places.push(place_name);
                     if let Some(init_num_tokens_at_place) = opt_init_mark {
                         initial_marking.insert(place_int_id,init_num_tokens_at_place);
                     }
@@ -82,7 +84,7 @@ pub fn read_pnml_first_pass<R: BufRead>(mut reader: EventReader<R>) -> Result<Pn
             _ => {}
         }
     }
-    Ok(PnmlParsingFirstPass::new(next_place, place_text_id_to_int_id, initial_marking, transitions_text_ids, raw_arcs))
+    Ok(PnmlParsingFirstPass::new(places, place_text_id_to_int_id,initial_marking, transitions_text_ids, raw_arcs))
 }
 
 

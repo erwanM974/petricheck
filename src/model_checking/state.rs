@@ -14,7 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-use crate::model::marking::Marking;
+use std::rc::Rc;
+
+use crate::model::{label::PetriTransitionLabel, marking::Marking};
 
 
 
@@ -23,14 +25,21 @@ use crate::model::marking::Marking;
 #[derive(Debug, PartialEq, Eq, Clone, Hash)]
 pub struct PetriKripkeState {
     pub marking : Marking,
-    pub previous_transition_label_id : Option<usize>
+    /// when generating a Kripke state from a Petri Net,
+    /// we may choose a subset of "tagged" transition labels
+    /// when generating the state space, after having fired once such transition,
+    /// the target Kripke state will have this "previous_tagged_transition_label" attributed filled accordingly
+    /// this allows a limited form of "past-tense" temporal reasoning
+    pub previous_tagged_transition_label : Option<Rc<PetriTransitionLabel>>
 }
 
 impl PetriKripkeState {
-    pub fn new(marking: Marking, previous_transition_label_id: Option<usize>) -> Self {
-        Self { marking, previous_transition_label_id }
+    pub fn new(marking: Marking, previous_tagged_transition_label: Option<Rc<PetriTransitionLabel>>) -> Self {
+        Self { marking, previous_tagged_transition_label }
     }
 }
+
+
 
 
 

@@ -14,7 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-use petricheck::{model::{marking::Marking, net::PetriNet, transition::PetriTransition}, model_checking::to_kripke::{DefaultPetriKripkeStateProducer, petri_to_kripke}, util::{context::PetriNetContext, parse_ctl::parser::BuiltinPetriCtlParser, vizualisation::petri_viz::PetriNetVisualizer}};
+use std::rc::Rc;
+
+use petricheck::{model::{label::{PetriStateLabel, PetriTransitionLabel}, marking::Marking, net::PetriNet, transition::PetriTransition}, model_checking::to_kripke::{PetriKripkeStateProducer, petri_to_kripke}, util::{parse_ctl::parser::BuiltinPetriCtlParser, vizualisation::{kripke_viz::PetriKripkeVisualizer, petri_viz::{petri_repr}}}};
 use graphviz_dot_builder::traits::{DotPrintable, GraphVizOutputFormat};
 use map_macro::{btree_map, hash_map, hash_set};
 
@@ -26,75 +28,72 @@ use citreelo::parser::CtlFormulaParser;
 
 #[test]
 pub fn test_simple_example() {
+    let lock_tr = Rc::new(PetriTransitionLabel::new("lock".to_string()));
+    let unlock_tr = Rc::new(PetriTransitionLabel::new("unlock".to_string()));
     let petri_net = PetriNet::new(
-        5, 
+        vec![
+            Some(Rc::new(PetriStateLabel::new("A_U".to_string()))),
+            Some(Rc::new(PetriStateLabel::new("A_L".to_string()))),
+            Some(Rc::new(PetriStateLabel::new("CTL".to_string()))),
+            Some(Rc::new(PetriStateLabel::new("B_U".to_string()))),
+            Some(Rc::new(PetriStateLabel::new("B_L".to_string()))),
+        ], 
         vec![
             PetriTransition::new(
+                Some(lock_tr.clone()),
                 hash_map! {0=>1,2=>1},
                 hash_map! {1=>1}
             ),
             PetriTransition::new(
+                Some(lock_tr.clone()),
                 hash_map! {3=>1,2=>1},
                 hash_map! {4=>1}
             ),
             PetriTransition::new(
+                Some(unlock_tr.clone()),
                 hash_map! {1=>1},
                 hash_map! {0=>1,2=>1}
             ),
             PetriTransition::new(
+                Some(unlock_tr.clone()),
                 hash_map! {4=>1},
                 hash_map! {3=>1,2=>1}
             )
         ]
     );
     let initial_marking = Marking::new(btree_map! {0=>1,2=>1,3=>1});
-    // ***
-    let context = PetriNetContext::new(
-        vec![
-            "A_U".to_string(),
-            "A_L".to_string(),
-            "CTL".to_string(),
-            "B_U".to_string(),
-            "B_L".to_string(),
-        ],
-        vec![
-            0,
-            0,
-            1,
-            1
-        ],
-        vec![
-            "lock".to_string(),
-            "unlock".to_string(),
-        ]
-    );
     {
-        let gv = context.petri_repr(&petri_net,Some(&initial_marking));
+        let gv = petri_repr(&petri_net,Some(&initial_marking));
         gv.print_dot(&[".".to_string()], "lock_petri", &GraphVizOutputFormat::png).unwrap();
     }
     // ***
     let kripke_only_marks = petri_to_kripke(
         &petri_net,
         initial_marking.clone(),
-        DefaultPetriKripkeStateProducer::new(hash_map! {})
+        &PetriKripkeStateProducer::new(hash_set! {})
     );
     {
-        let gv = context.get_kripke_repr(&kripke_only_marks);
+        let gv = PetriKripkeVisualizer::new(&petri_net).get_kripke_repr(&kripke_only_marks);
         gv.print_dot(&[".".to_string()], "lock_kripke1", &GraphVizOutputFormat::png).unwrap();
     }
     // ***
     let kripke_with_prev_labs = petri_to_kripke(
         &petri_net,
         initial_marking.clone(),
-        DefaultPetriKripkeStateProducer::new(hash_map! {0=>0,1=>0,2=>1,3=>1})
+        &PetriKripkeStateProducer::new(
+            hash_set! {
+                (*lock_tr).clone(),
+                (*unlock_tr).clone(),
+            }
+        )
     );
     {
-        let gv = context.get_kripke_repr(&kripke_with_prev_labs);
+        let gv = PetriKripkeVisualizer::new(&petri_net).get_kripke_repr(&kripke_with_prev_labs);
         gv.print_dot(&[".".to_string()], "lock_kripke2", &GraphVizOutputFormat::png).unwrap();
     }
     // ***
     let initial_states = hash_set! {0};
-    let ctl_parser = BuiltinPetriCtlParser::from_context(&context, &petri_net).unwrap();
+    let ctl_parser = BuiltinPetriCtlParser::from_net(&petri_net).unwrap();
     
     let phis = vec![
         // at initial state

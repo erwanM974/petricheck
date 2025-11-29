@@ -14,11 +14,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-use std::{collections::HashMap, fs::File, io::{BufRead, BufReader}};
+use std::{collections::HashMap, fs::File, io::{BufRead, BufReader}, rc::Rc};
 
 use xml::{reader::XmlEvent, EventReader};
 
-use crate::{model::{marking::Marking, net::PetriNet, transition::PetriTransition}, util::parse_pnml::{error::PnmlParsingError, extract::read_pnml_first_pass}};
+use crate::{model::{label::{PetriStateLabel, PetriTransitionLabel}, marking::Marking, net::PetriNet, transition::PetriTransition}, util::parse_pnml::{error::PnmlParsingError, extract::read_pnml_first_pass}};
 
 use crate::util::parse_pnml::syntax::*;
 
@@ -101,10 +101,18 @@ fn read_pnml_content<R: BufRead>(reader: EventReader<R>) -> Result<PnmlFileConte
         for transition in first_pass_result.transitions_text_ids {
             let from_places = transitions_incoming.remove(&transition).unwrap();
             let to_places = transitions_outgoing.remove(&transition).unwrap();
-            transitions.push(PetriTransition::new(from_places, to_places));
+            transitions.push(PetriTransition::new(Some(
+                Rc::new(PetriTransitionLabel::new(transition))),
+                from_places, 
+                to_places
+            ));
         }
     }
-    let net = PetriNet::new(first_pass_result.number_of_places, transitions);
+    let places = first_pass_result.places
+        .into_iter()
+        .map(|x| Some(Rc::new(PetriStateLabel::new(x))))
+        .collect();
+    let net = PetriNet::new(places, transitions);
     let marking = Marking::new(first_pass_result.initial_marking);
     Ok(PnmlFileContent::new(net,marking,first_pass_result.place_text_id_to_int_id))
 }

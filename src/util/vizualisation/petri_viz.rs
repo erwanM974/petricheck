@@ -21,81 +21,80 @@ use graphviz_dot_builder::{edge::{edge::GraphVizEdge, style::GraphvizEdgeStyleIt
 
 use crate::model::{marking::Marking, net::PetriNet};
 
-pub trait PetriNetVisualizer {
 
-    fn get_transition_label_from_transition_id(&self, tr_id : &usize) -> &str;
 
-    fn get_place_label(&self, place_id : &usize) -> &str;
-
-    fn petri_repr(
-        &self,
-        petri : &PetriNet, 
-        marking : Option<&Marking>
-    ) -> GraphVizDiGraph {
-        // Create a new graph:
-        let mut digraph = GraphVizDiGraph::new(vec![]);
-        // places
-        for place_id in 0..petri.num_places {
-            let label = if let Some(mrk) = marking {
-                match mrk.get_num_toks_at_place(&place_id) {
-                    Some(num_tokens_at_place) => {
-                        debug_assert!(*num_tokens_at_place >0);
-                        format!("tks:{}",num_tokens_at_place)
-                    },
-                    None => {
-                        "".to_string()
-                    }
-                }
-            } else{
-                "".to_string()
-            };
-            let style = vec![
-                    GraphvizNodeStyleItem::Shape(GvNodeShape::Circle),
-                    GraphvizNodeStyleItem::Label(format!("{}\n{}",self.get_place_label(&place_id),label))];
-            digraph.add_node(GraphVizNode::new(format!("place{:}",place_id),style));
-        }
-        // transitions
-        for (tr_id,transition) in petri.transitions.iter().enumerate() {
-            let label = self.get_transition_label_from_transition_id(&tr_id);
-            let style = vec![
-                    GraphvizNodeStyleItem::Shape(GvNodeShape::Rectangle),
-                    GraphvizNodeStyleItem::Label(label.to_string())];
-            digraph.add_node(GraphVizNode::new(format!("tr{:}",tr_id),style));
-            for (preset_place,preset_req_num_toks) in transition.iter_preset_tokens() {
-                debug_assert!(*preset_req_num_toks>0);
-                let style = if *preset_req_num_toks > 1 {
-                    vec![GraphvizEdgeStyleItem::Label(preset_req_num_toks.to_string())]
-                } else {
-                    Vec::new()
-                };
-                let edge = GraphVizEdge::new(
-                    format!("place{:}",preset_place),
-                    None,
-                    format!("tr{:}",tr_id),
-                    None,
-                    style
-                );
-                digraph.add_edge(edge);
+pub fn petri_repr(
+    petri : &PetriNet, 
+    marking : Option<&Marking>
+) -> GraphVizDiGraph {
+    // Create a new graph:
+    let mut digraph = GraphVizDiGraph::new(vec![]);
+    // places
+    for (place_id,place_content) in petri.places.iter().enumerate() {
+        let mut label = format!("p{:}",place_id);
+        if let Some(lab_ref) = place_content {
+            label.push_str(&format!(":({:})", lab_ref));
+        };
+        if let Some(mrk) = marking {
+            if let Some(num_tokens_at_place) = mrk.get_num_toks_at_place(&place_id) {
+                debug_assert!(*num_tokens_at_place >0);
+                label.push_str(&format!("\ntks:{:}", num_tokens_at_place));
             }
-            for (postset_place,postset_added_toks) in transition.iter_postset_tokens() {
-                debug_assert!(*postset_added_toks>0);
-                let style = if *postset_added_toks > 1 {
-                    vec![GraphvizEdgeStyleItem::Label(postset_added_toks.to_string())]
-                } else {
-                    Vec::new()
-                };
-                let edge = GraphVizEdge::new(
-                    format!("tr{:}",tr_id),
-                    None,
-                    format!("place{:}",postset_place),
-                    None,
-                    style
-                );
-                digraph.add_edge(edge);
-            }
-        }
-        digraph
+        };
+        let style = vec![
+                GraphvizNodeStyleItem::Shape(GvNodeShape::Circle),
+                GraphvizNodeStyleItem::Label(label)];
+        digraph.add_node(GraphVizNode::new(format!("place{:}",place_id),style));
     }
-
+    // transitions
+    for (tr_id,transition) in petri.transitions.iter().enumerate() {
+        let transition_label = match &transition.transition_label {
+            Some(tr_lab) => {
+                format!("{:}",tr_lab)
+            },
+            None => {
+                "".to_string()
+            }
+        };
+        let style = vec![
+                GraphvizNodeStyleItem::Shape(GvNodeShape::Rectangle),
+                GraphvizNodeStyleItem::Label(transition_label)];
+        digraph.add_node(GraphVizNode::new(format!("tr{:}",tr_id),style));
+        for (preset_place,preset_req_num_toks) in transition.iter_preset_tokens() {
+            debug_assert!(*preset_req_num_toks>0);
+            let style = if *preset_req_num_toks > 1 {
+                vec![GraphvizEdgeStyleItem::Label(preset_req_num_toks.to_string())]
+            } else {
+                Vec::new()
+            };
+            let edge = GraphVizEdge::new(
+                format!("place{:}",preset_place),
+                None,
+                format!("tr{:}",tr_id),
+                None,
+                style
+            );
+            digraph.add_edge(edge);
+        }
+        for (postset_place,postset_added_toks) in transition.iter_postset_tokens() {
+            debug_assert!(*postset_added_toks>0);
+            let style = if *postset_added_toks > 1 {
+                vec![GraphvizEdgeStyleItem::Label(postset_added_toks.to_string())]
+            } else {
+                Vec::new()
+            };
+            let edge = GraphVizEdge::new(
+                format!("tr{:}",tr_id),
+                None,
+                format!("place{:}",postset_place),
+                None,
+                style
+            );
+            digraph.add_edge(edge);
+        }
+    }
+    digraph
 }
+
+
 

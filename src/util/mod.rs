@@ -16,7 +16,6 @@ limitations under the License.
 
 
 
-pub mod context;
 pub mod vizualisation;
 pub mod parse_ctl;
 pub mod parse_pnml;

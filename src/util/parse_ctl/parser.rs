@@ -16,19 +16,20 @@ limitations under the License.
 
 
 
-use std::collections::HashMap;
+use std::{collections::HashMap, rc::Rc};
 
 use citreelo::{ctl::{BinaryCTLOperator, CTLFormula, CTLFormulaLeaf}};
 
-use crate::{model::{net::PetriNet}, model_checking::props::{BuiltinPetriAtomicProposition, TokensCountAtom, TokensCountRelation}, util::{context::PetriNetContext, parse_ctl::error::PetriCtlParsingError}};
+use crate::{model::{label::PetriTransitionLabel, net::PetriNet}, model_checking::props::{BuiltinPetriAtomicProposition, TokensCountAtom, TokensCountRelation}, util::parse_ctl::error::PetriCtlParsingError};
 
 
 pub struct BuiltinPetriCtlParser {
     /// for each place name maps to its index in the PetriNet object
     pub place_name_to_index : HashMap<String,usize>,
 
-    /// for each transition label maps to the index representing that label
-    pub transition_label_to_label_id : HashMap<String,usize>,
+    /// for each transition label maps to the index representing the tag
+    /// that decorates certain states to signifies that the previous transition 
+    pub transition_label_to_ref : HashMap<String,Rc<PetriTransitionLabel>>,
 
     /// for each transition label
     /// the firing condition of a transition with that label 
@@ -45,73 +46,77 @@ pub struct BuiltinPetriCtlParser {
 
 
 
-
 impl BuiltinPetriCtlParser {
-    pub fn from_context(context : &PetriNetContext, petri_net : &PetriNet) -> Result<Self,PetriCtlParsingError> {
-        if petri_net.num_places != context.places_names.len() {
-            return Err(PetriCtlParsingError::MismatchInTheNumberOfPlaces);
-        }
+    pub fn from_net
+    (
+        petri_net : &PetriNet
+    ) -> Result<Self,PetriCtlParsingError> {
         // ***
         let mut place_name_to_index = HashMap::new();
-        for (place_id,place_name) in context.places_names.iter().enumerate() {
-            if place_name_to_index.insert(place_name.clone(), place_id).is_some() {
-                return Err(PetriCtlParsingError::MultiplePlacesHaveTheSameName);
+        for (place_id,place_content) in petri_net.places.iter().enumerate() {
+            if let Some(place_lab_ref) = place_content {
+                if place_name_to_index.insert(place_lab_ref.label.to_string(), place_id).is_some() {
+                    return Err(PetriCtlParsingError::MultiplePlacesHaveTheSameName);
+                }
             }
         }
         // ***
-        if context.transitions_label_ids.len() != petri_net.transitions.len() {
-            return Err(PetriCtlParsingError::MismatchInTheNumberOfTransitions);
-        }
-        // ***
-        let mut transition_label_to_label_id = HashMap::new();
-        for (tr_lab_id,tr_lab) in context.transition_labels.iter().enumerate() {
-            if transition_label_to_label_id.insert(tr_lab.to_owned(), tr_lab_id).is_some() {
-                return Err(PetriCtlParsingError::DuplicatedTransitionLabelInContext);
+        let mut transition_label_to_ref = HashMap::new();
+        for transition in &petri_net.transitions {
+            if let Some(transition_label_ref) = &transition.transition_label {
+                if let Some(other_ref) = transition_label_to_ref.insert(
+                    transition_label_ref.label.to_owned(), 
+                    transition_label_ref.clone()
+                ) {
+                    if other_ref != *transition_label_ref {
+                        return Err(PetriCtlParsingError::DuplicatedTransitionLabelInContext);
+                    }
+                }
             }
         }
         // ***
         let mut transition_label_to_firing_condition = HashMap::new();
-        for (tr_id, tr_label_id) in context.transitions_label_ids.iter().enumerate() {
-            let transition = petri_net.transitions.get(tr_id).unwrap();
-            let tr_firing_condition = {
-                let mut ctl = CTLFormula::Leaf(CTLFormulaLeaf::True);
-                for (place_id,req_num_toks) in transition.iter_preset_tokens() {
-                    debug_assert!(*req_num_toks > 0);
-                    let atom = BuiltinPetriAtomicProposition::TokensCount(
-                        TokensCountRelation::GreaterOrEqual, 
-                        TokensCountAtom::NumberOfTokensInPlace(*place_id), 
-                        TokensCountAtom::RawInteger(*req_num_toks)
+        for transition in &petri_net.transitions {
+            if let Some(transition_label_ref) = &transition.transition_label {
+                let tr_firing_condition = {
+                    let mut ctl = CTLFormula::Leaf(CTLFormulaLeaf::True);
+                    for (place_id,req_num_toks) in transition.iter_preset_tokens() {
+                        debug_assert!(*req_num_toks > 0);
+                        let atom = BuiltinPetriAtomicProposition::TokensCount(
+                            TokensCountRelation::GreaterOrEqual, 
+                            TokensCountAtom::NumberOfTokensInPlace(*place_id), 
+                            TokensCountAtom::RawInteger(*req_num_toks)
+                        );
+                        ctl = CTLFormula::Binary(
+                            BinaryCTLOperator::And, 
+                            Box::new(ctl), 
+                            Box::new(CTLFormula::Leaf(CTLFormulaLeaf::AtomicProp(atom)))
+                        );
+                    }
+                    ctl
+                };
+                // ***
+                if let Some(ctl) = transition_label_to_firing_condition.remove(&transition_label_ref.label) {
+                    transition_label_to_firing_condition.insert(
+                        transition_label_ref.label.to_string(), 
+                        CTLFormula::Binary(
+                            BinaryCTLOperator::Or, 
+                            Box::new(ctl), 
+                            Box::new(tr_firing_condition)
+                        )
                     );
-                    ctl = CTLFormula::Binary(
-                        BinaryCTLOperator::And, 
-                        Box::new(ctl), 
-                        Box::new(CTLFormula::Leaf(CTLFormulaLeaf::AtomicProp(atom)))
+                } else {
+                    transition_label_to_firing_condition.insert(
+                        transition_label_ref.label.to_string(), 
+                        tr_firing_condition
                     );
                 }
-                ctl
-            };
-            let tr_label = context.get_transition_label_from_label_id(tr_label_id);
-            // ***
-            if let Some(ctl) = transition_label_to_firing_condition.remove(tr_label) {
-                transition_label_to_firing_condition.insert(
-                    tr_label.to_string(), 
-                    CTLFormula::Binary(
-                        BinaryCTLOperator::Or, 
-                        Box::new(ctl), 
-                        Box::new(tr_firing_condition)
-                    )
-                );
-            } else {
-                transition_label_to_firing_condition.insert(
-                    tr_label.to_string(), 
-                    tr_firing_condition
-                );
             }
         }
         // ***
         Ok(Self {
             place_name_to_index,
-            transition_label_to_label_id,
+            transition_label_to_ref,
             transition_label_to_firing_condition
         })
     }
