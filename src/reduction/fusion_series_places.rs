@@ -38,7 +38,7 @@ pub fn find_and_simplify_series_places(
     petri_info : &mut PetriNetInfo,
     initial_markings : &mut Option<Marking>
 ) -> bool {
-    if let Some(series_place) = find_series_places(&petri_net, petri_info) {
+    if let Some(series_place) = find_series_places(petri_net, petri_info) {
         // we will fuse the origin_place and the target_place so we need to update the initial_marking 
         if let Some(mark) = initial_markings {
             // if there are tokens in the origin_place, we transfer them to the target_place
@@ -55,7 +55,7 @@ pub fn find_and_simplify_series_places(
             // and we remove the origin_place, shifting the indices 
             let mut new_tokens = BTreeMap::new();
             for (place_id,num_toks) in mark.tokens.iter() {
-                match usize::cmp(&place_id,&series_place.origin_place_id) {
+                match usize::cmp(place_id,&series_place.origin_place_id) {
                     std::cmp::Ordering::Less => {
                         new_tokens.insert(*place_id,*num_toks);
                     },

@@ -48,7 +48,7 @@ impl PetriKripkeStateProducer {
             let previous_transition_tag_id = match &transition.transition_label {
                 None => {None},
                 Some(lab_ref) => {
-                    if self.tagged_transition_labels.contains(&lab_ref) {
+                    if self.tagged_transition_labels.contains(lab_ref) {
                         Some(lab_ref.clone())
                     } else {
                         None

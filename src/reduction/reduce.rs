@@ -25,7 +25,7 @@ pub fn reduce_petri_net(
     initial_markings : &mut Option<Marking>
 ) {
 
-    let mut petri_info = PetriNetInfo::from_petri_net(&petri_net);
+    let mut petri_info = PetriNetInfo::from_petri_net(petri_net);
 
     while find_and_simplify_series_places(
         petri_net,

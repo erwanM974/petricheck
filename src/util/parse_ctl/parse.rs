@@ -34,7 +34,7 @@ impl CtlFormulaParser<BuiltinPetriAtomicProposition> for BuiltinPetriCtlParser {
             ),
             map(
                 |x|self.parse_previous_label_condition(x),
-                |y| CTLFormula::Leaf(y)
+                CTLFormula::Leaf
             ),
             |x| self.parse_transition_label_firing_condition(x),
         )).parse(input)

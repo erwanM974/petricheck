@@ -16,7 +16,7 @@ limitations under the License.
 
 use std::{collections::HashMap, rc::Rc};
 
-use crate::model::{label::{PetriStateLabel, PetriTransitionLabel}, transition::{self, PetriTransition}};
+use crate::model::{label::{PetriStateLabel, PetriTransitionLabel}, transition::PetriTransition};
 
 
 
