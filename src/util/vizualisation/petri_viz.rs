@@ -25,7 +25,7 @@ use crate::model::{marking::Marking, net::PetriNet};
 
 pub fn petri_repr(
     petri : &PetriNet, 
-    marking : Option<&Marking>
+    marking : &Option<Marking>
 ) -> GraphVizDiGraph {
     // Create a new graph:
     let mut digraph = GraphVizDiGraph::new(vec![]);

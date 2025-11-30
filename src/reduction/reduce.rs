@@ -14,14 +14,24 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+use crate::{model::{marking::Marking, net::PetriNet}, reduction::{fusion_series_places::find_and_simplify_series_places, info::PetriNetInfo}};
 
 
 
-pub mod model;
 
-pub mod model_checking;
 
-pub mod util;
+pub fn reduce_petri_net(
+    petri_net : &mut PetriNet,
+    initial_markings : &mut Option<Marking>
+) {
 
-pub mod reduction;
+    let mut petri_info = PetriNetInfo::from_petri_net(&petri_net);
 
+    while find_and_simplify_series_places(
+        petri_net,
+        &mut petri_info,
+        initial_markings
+    ) {
+
+    }
+}

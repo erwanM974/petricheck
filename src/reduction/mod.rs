@@ -14,14 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-
-
-
-pub mod model;
-
-pub mod model_checking;
-
-pub mod util;
-
-pub mod reduction;
-
+pub mod reduce;
+mod fusion_series_places;
+mod info;

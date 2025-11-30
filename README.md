@@ -5,13 +5,27 @@
 This micro library provides utilities to:
 - define basic Place/Transition [Petri Nets](https://en.wikipedia.org/wiki/Petri_net)
 - parse such Petri Nets from [PNML files](https://www.pnml.org/)
+- relabel places and transitions
+- reduce Petri Nets so they are smaller in size (less places, less transitions)
 - construct [Kripke structures](https://en.wikipedia.org/wiki/Kripke_structure_(model_checking)) from the reachability graph of a Petri Net
 - [model-check](https://en.wikipedia.org/wiki/Model_checking) [CTL](https://en.wikipedia.org/wiki/Computation_tree_logic) formulae on a Kripke structure constructed from a Petri Net
 
 
 
 
-## Example
+
+
+
+## Example for relabelling and reduction
+
+The table below illustrates transition relabelling and reduction.
+
+| initial  | After relabelling "C→∅"  | After reduction  |
+|---|---|---|
+| ![initial](README_images/relabreduc/initial.png) | ![relab](README_images/relabreduc/after_relabel.png) | ![reduc](README_images/relabreduc/after_reduction.png)  |
+
+
+## Example for Kripke structure generation and model checking
 
 Let us consider the following example of a Petri Net:
 

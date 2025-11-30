@@ -21,7 +21,7 @@ use std::collections::BTreeMap;
 pub struct Marking {
     // place id to number of tokens
     // use BTreeMap so one can derive the Hash of Marking
-    tokens : BTreeMap<usize,u32>
+    pub(crate) tokens : BTreeMap<usize,u32>
 }
 
 impl Marking {

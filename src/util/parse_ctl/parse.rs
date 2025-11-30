@@ -34,7 +34,7 @@ impl CtlFormulaParser<BuiltinPetriAtomicProposition> for BuiltinPetriCtlParser {
             ),
             map(
                 |x|self.parse_previous_label_condition(x),
-                |y| CTLFormula::Leaf(CTLFormulaLeaf::AtomicProp(y))
+                |y| CTLFormula::Leaf(y)
             ),
             |x| self.parse_transition_label_firing_condition(x),
         )).parse(input)
@@ -164,7 +164,8 @@ impl BuiltinPetriCtlParser {
                         Ok((rem,firing_cond.clone()))
                     },
                     None => {
-                        Err(nom::Err::Error(nom::error::make_error(input, ErrorKind::Fail)))
+                        // an unknown transition is not fireable
+                        Ok((rem,CTLFormula::Leaf(CTLFormulaLeaf::False)))
                     },
                 }
             },
@@ -176,7 +177,7 @@ impl BuiltinPetriCtlParser {
     fn parse_previous_label_condition<'a, E: nom::error::ParseError<&'a str>>(
         &self,
         input : &'a str
-    ) -> nom::IResult<&'a str, BuiltinPetriAtomicProposition, E> {
+    ) -> nom::IResult<&'a str, CTLFormulaLeaf<BuiltinPetriAtomicProposition>, E> {
         let mut parser = delimited(
             tag("is-previous("), 
             |x| parse_petri_element_reference::<'a,E>(x), 
@@ -187,10 +188,11 @@ impl BuiltinPetriCtlParser {
                 match self.transition_label_to_ref.get(&tr_lab) {
                     Some(label_id) => {
                         let prop = BuiltinPetriAtomicProposition::PreviousTransitionLabelMustBe(label_id.clone());
-                        Ok((rem,prop))
+                        Ok((rem,CTLFormulaLeaf::AtomicProp(prop)))
                     },
                     None => {
-                        Err(nom::Err::Error(nom::error::make_error(input, ErrorKind::Fail)))
+                        // an unknown transition is not previous
+                        Ok((rem,CTLFormulaLeaf::False))
                     },
                 }
             },

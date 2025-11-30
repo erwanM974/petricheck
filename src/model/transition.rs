@@ -24,11 +24,45 @@ use crate::model::{label::PetriTransitionLabel, marking::Marking};
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct PetriTransition {
     pub transition_label : Option<Rc<PetriTransitionLabel>>,
-    preset_tokens    : HashMap<usize,u32>,
-    postset_tokens   : HashMap<usize,u32>,
+    pub(crate) preset_tokens    : HashMap<usize,u32>,
+    pub(crate) postset_tokens   : HashMap<usize,u32>,
 }
 
 impl PetriTransition {
+    pub fn remove_place(&mut self, place_to_remove_id : usize) {
+        let mut new_preset_tokens = HashMap::new();
+        for (preset_place_id, num_toks) in self.preset_tokens.drain() {
+            match usize::cmp(&preset_place_id,&place_to_remove_id) {
+                std::cmp::Ordering::Less => {
+                    new_preset_tokens.insert(preset_place_id,num_toks);
+                },
+                std::cmp::Ordering::Equal => {
+                    panic!("illegal removal of place that is referred to in transition");
+                },
+                std::cmp::Ordering::Greater => {
+                    new_preset_tokens.insert(preset_place_id - 1,num_toks);
+                }
+            }
+        }
+        self.preset_tokens = new_preset_tokens;
+        // ***
+        let mut new_postset_tokens = HashMap::new();
+        for (postset_place_id, num_toks) in self.postset_tokens.drain() {
+            match usize::cmp(&postset_place_id,&place_to_remove_id) {
+                std::cmp::Ordering::Less => {
+                    new_postset_tokens.insert(postset_place_id,num_toks);
+                },
+                std::cmp::Ordering::Equal => {
+                    panic!("illegal removal of place that is referred to in transition");
+                },
+                std::cmp::Ordering::Greater => {
+                    new_postset_tokens.insert(postset_place_id - 1,num_toks);
+                }
+            }
+        }
+        self.postset_tokens = new_postset_tokens;
+    }
+
     pub fn new(
         transition_label : Option<Rc<PetriTransitionLabel>>,
         preset_tokens: HashMap<usize,u32>, 

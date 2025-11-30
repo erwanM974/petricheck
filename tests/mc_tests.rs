@@ -63,7 +63,7 @@ pub fn test_simple_example() {
     );
     let initial_marking = Marking::new(btree_map! {0=>1,2=>1,3=>1});
     {
-        let gv = petri_repr(&petri_net,Some(&initial_marking));
+        let gv = petri_repr(&petri_net,&Some(initial_marking.clone()));
         gv.print_dot(&[".".to_string()], "lock_petri", &GraphVizOutputFormat::png).unwrap();
     }
     // ***

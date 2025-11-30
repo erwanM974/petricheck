@@ -23,6 +23,6 @@ map-macro            = "0.3.0"
 graphviz_dot_builder = "0.1.5"
 itertools            = "0.14.0"
 nom                  = "8.0.0"
-citreelo             = { git = "https://github.com/erwanM974/citreelo" }
+citreelo             = "0.1.1"
 
 

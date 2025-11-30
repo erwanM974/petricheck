@@ -14,9 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-use std::rc::Rc;
+use std::{collections::HashMap, rc::Rc};
 
-use crate::model::{label::PetriStateLabel, transition::PetriTransition};
+use crate::model::{label::{PetriStateLabel, PetriTransitionLabel}, transition::{self, PetriTransition}};
 
 
 
@@ -28,6 +28,14 @@ pub struct PetriNet {
 }
 
 impl PetriNet {
+
+    pub fn remove_place(&mut self, place_to_remove_id : usize) {
+        for transition in self.transitions.iter_mut() {
+            transition.remove_place(place_to_remove_id);
+        }
+        self.places.remove(place_to_remove_id);
+    }
+
     pub fn new(places: Vec<Option<Rc<PetriStateLabel>>>, transitions: Vec<PetriTransition>) -> Self {
         Self { places, transitions }
     }
@@ -47,4 +55,43 @@ impl PetriNet {
         self.transitions.push(transition);
         tr_id
     }
+
+    pub fn relabel_places(&mut self, relabbelling : HashMap<PetriStateLabel, Option<Rc<PetriStateLabel>>>) {
+        let mut new_places = vec![];
+        for place in self.places.drain(..) {
+            let mut replaced = false;
+            if let Some(x) = &place {
+                if let Some(new_lab) = relabbelling.get(x) {
+                    new_places.push(new_lab.clone());
+                    replaced = true;
+                }
+            }
+            if !replaced {
+                new_places.push(place);
+            }
+        }
+        self.places = new_places;
+    }
+
+    pub fn relabel_transitions(&mut self, relabbelling : HashMap<PetriTransitionLabel, Option<Rc<PetriTransitionLabel>>>) {
+        let mut new_transitions = vec![];
+        for transition in self.transitions.drain(..) {
+            if let Some(x) = &transition.transition_label {
+                if let Some(new_lab) = relabbelling.get(x) {
+                    let new_transition = PetriTransition::new(
+                        new_lab.clone(), 
+                        transition.preset_tokens, 
+                        transition.postset_tokens
+                    );
+                    new_transitions.push(new_transition);
+                } else {
+                    new_transitions.push(transition);
+                }
+            } else {
+                new_transitions.push(transition);
+            }
+        }
+        self.transitions = new_transitions;
+    }
+
 }
