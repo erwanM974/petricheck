@@ -16,8 +16,7 @@ keywords = ["petri-net", "model-checking"]
 
 
 [dependencies]
-xml                  = "0.8.20"
-log                  = "0.4"
+xml = "1.2.0"
 thiserror            = "2"
 map-macro            = "0.3.0"
 graphviz_dot_builder = "0.1.5"
