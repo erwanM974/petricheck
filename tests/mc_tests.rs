@@ -16,7 +16,7 @@ limitations under the License.
 
 use std::rc::Rc;
 
-use petricheck::{model::{label::{PetriStateLabel, PetriTransitionLabel}, marking::Marking, net::PetriNet, transition::PetriTransition}, model_checking::to_kripke::{PetriKripkeStateProducer, petri_to_kripke}, util::{parse_ctl::parser::BuiltinPetriCtlParser, vizualisation::{kripke_viz::PetriKripkeVisualizer, petri_viz::{petri_repr}}}};
+use petricheck::{model::{label::{PetriStateLabel, PetriTransitionLabel}, marking::Marking, net::PetriNet, transition::PetriTransition}, model_checking::to_kripke::{PetriKripkeGenerationSafenessRequirement, PetriKripkeStateProducer, petri_to_kripke}, util::{parse_ctl::parser::BuiltinPetriCtlParser, vizualisation::{kripke_viz::PetriKripkeVisualizer, petri_viz::petri_repr}}};
 use graphviz_dot_builder::traits::{DotPrintable, GraphVizOutputFormat};
 use map_macro::{btree_map, hash_map, hash_set};
 
@@ -70,8 +70,9 @@ pub fn test_simple_example() {
     let kripke_only_marks = petri_to_kripke(
         &petri_net,
         initial_marking.clone(),
-        &PetriKripkeStateProducer::new(hash_set! {})
-    );
+        &PetriKripkeStateProducer::new(hash_set! {}),
+        &PetriKripkeGenerationSafenessRequirement::KSafeness(1)
+    ).unwrap();
     {
         let gv = PetriKripkeVisualizer::new(&petri_net).get_kripke_repr(&kripke_only_marks);
         gv.print_dot(&[".".to_string()], "lock_kripke1", &GraphVizOutputFormat::png).unwrap();
@@ -85,8 +86,9 @@ pub fn test_simple_example() {
                 (*lock_tr).clone(),
                 (*unlock_tr).clone(),
             }
-        )
-    );
+        ),
+        &PetriKripkeGenerationSafenessRequirement::KSafeness(1)
+    ).unwrap();
     {
         let gv = PetriKripkeVisualizer::new(&petri_net).get_kripke_repr(&kripke_with_prev_labs);
         gv.print_dot(&[".".to_string()], "lock_kripke2", &GraphVizOutputFormat::png).unwrap();

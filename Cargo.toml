@@ -1,6 +1,6 @@
 [package]
 name = "petricheck"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Erwan Mahe"]
 edition = "2024"
 
@@ -16,8 +16,8 @@ keywords = ["petri-net", "model-checking"]
 
 
 [dependencies]
-xml = "1.2.0"
-thiserror            = "2"
+xml                  = "1.2.0"
+thiserror            = "2.0.17"
 map-macro            = "0.3.0"
 graphviz_dot_builder = "0.1.5"
 itertools            = "0.14.0"

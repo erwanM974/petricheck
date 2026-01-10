@@ -21,7 +21,7 @@ use crate::model::{label::{PetriStateLabel, PetriTransitionLabel}, transition::P
 
 
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PetriNet {
     pub places      : Vec<Option<Rc<PetriStateLabel>>>,
     pub transitions : Vec<PetriTransition> 

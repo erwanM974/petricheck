@@ -27,6 +27,20 @@ use crate::model::transition::PetriTransition;
 use crate::model_checking::state::PetriKripkeState;
 
 
+/// a net is k-safe if none of its reachable markings contains more than k tokens in any place
+/// when generating the Kripke structure from the reachability graph, we may stop the generation 
+/// if k-safeness is not upheld
+pub enum PetriKripkeGenerationSafenessRequirement {
+    No,
+    KSafeness(u32)
+}
+
+#[derive(Debug, PartialEq, Eq, Clone, Hash)]
+pub enum PetriKripkeGenerationError {
+    /// k-safeness is violated on a certain place after having fired a certain transition
+    KSafenessViolation{place_id:usize,transition_id:usize}
+}
+
 
 pub struct PetriKripkeStateProducer {
     tagged_transition_labels : HashSet<PetriTransitionLabel>
@@ -37,14 +51,22 @@ impl PetriKripkeStateProducer {
         Self { tagged_transition_labels }
     }
 
-
     pub fn try_reach_new_state(
         &self,
         net_place_num : usize,
         initial : &PetriKripkeState,
-        transition : &PetriTransition
-    ) -> Option<PetriKripkeState> {
+        transition : &PetriTransition,
+        transition_id : usize,
+        req : &PetriKripkeGenerationSafenessRequirement
+    ) -> Result<Option<PetriKripkeState>,PetriKripkeGenerationError> {
         if let Some(new_marking) = transition.try_fire(net_place_num, &initial.marking) {
+            if let PetriKripkeGenerationSafenessRequirement::KSafeness(k) = req {
+                for (place_id,num_toks) in new_marking.iter_tokens() {
+                    if num_toks > k {
+                        return Err(PetriKripkeGenerationError::KSafenessViolation { place_id: *place_id, transition_id })
+                    }
+                }
+            }
             let previous_transition_tag_id = match &transition.transition_label {
                 None => {None},
                 Some(lab_ref) => {
@@ -55,11 +77,11 @@ impl PetriKripkeStateProducer {
                     }
                 }
             };
-            Some(
+            Ok(Some(
                 PetriKripkeState::new(new_marking, previous_transition_tag_id)
-            )
+            ))
         } else {
-            None 
+            Ok(None) 
         }
     }
 }
@@ -67,8 +89,9 @@ impl PetriKripkeStateProducer {
 pub fn petri_to_kripke(
     petri : &PetriNet, 
     initial_marking : Marking,
-    state_producer : &PetriKripkeStateProducer
-) -> KripkeStructure<PetriKripkeState> {
+    state_producer : &PetriKripkeStateProducer,
+    req : &PetriKripkeGenerationSafenessRequirement
+) -> Result<KripkeStructure<PetriKripkeState>,PetriKripkeGenerationError> {
     let (mut states, mut states_map, mut queue) = {
         let initial_state = PetriKripkeState::new(initial_marking.clone(), None);
         let states_map = hash_map!{
@@ -83,12 +106,12 @@ pub fn petri_to_kripke(
     let net_num_places = petri.places.len();
     while let Some(origin_state) = queue.pop() {
         let origin_state_id = *states_map.get(&origin_state).unwrap();
-        for transition in petri.transitions.iter(){
+        for (transition_id,transition) in petri.transitions.iter().enumerate() {
             if let Some(target_state) = state_producer.try_reach_new_state(
                 net_num_places, 
                 &origin_state, 
-                transition
-            ) {
+                transition,transition_id,req
+            )? {
                 let target_state_id = match states_map.get(&target_state) {
                     None => {
                         let id = states.len();
@@ -108,7 +131,7 @@ pub fn petri_to_kripke(
             }
         }
     }
-    KripkeStructure::new(states)
+    Ok(KripkeStructure::new(states))
 }
 
 

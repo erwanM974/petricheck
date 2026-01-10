@@ -14,7 +14,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-use crate::{model::{marking::Marking, net::PetriNet}, reduction::{fusion_series_places::find_and_simplify_series_places, info::PetriNetInfo}};
+use crate::model::{marking::Marking, net::PetriNet};
+use crate::reduction::info::PetriNetInfo;
+use crate::reduction::fusion_series_places::find_and_simplify_series_places;
+use crate::reduction::fusion_series_transitions_variant1::find_and_simplify_series_transitions_variant1;
+use crate::reduction::fusion_series_transitions_variant2::find_and_simplify_series_transitions_variant2;
 
 
 
@@ -27,11 +31,31 @@ pub fn reduce_petri_net(
 
     let mut petri_info = PetriNetInfo::from_petri_net(petri_net);
 
-    while find_and_simplify_series_places(
-        petri_net,
-        &mut petri_info,
-        initial_markings
-    ) {
-
+    loop {
+        if find_and_simplify_series_transitions_variant1(
+            petri_net,
+            &mut petri_info,
+            initial_markings
+        ) {
+            #[cfg(debug_assertions)] println!("simplify_series_transitions_variant1");
+            continue;
+        }
+        if find_and_simplify_series_transitions_variant2(
+            petri_net,
+            &mut petri_info,
+            initial_markings
+        ) {
+            #[cfg(debug_assertions)] println!("simplify_series_transitions_variant2");
+            continue;
+        }
+        if find_and_simplify_series_places(
+            petri_net,
+            &mut petri_info,
+            initial_markings
+        ) {
+            #[cfg(debug_assertions)] println!("simplify_series_places");
+            continue;
+        }
+        break;
     }
 }

@@ -112,30 +112,39 @@ pub fn find_and_simplify_series_places(
 
 /// series places are pairs of place (p1,p2) such that:
 /// - there exists a single transition t such that p1->t->p2
-/// - and t is the only transition which accepts tokens from p1 
+/// - t is the only transition which accepts tokens from p1 
+/// - the label of t is the empty label
+/// - the places p1 and p2 contain the same label
+/// see https://ieeexplore.ieee.org/document/24143 
 fn find_series_places(
     petri_net : &PetriNet, 
     petri_info : &PetriNetInfo
 ) -> Option<SeriesPlacesPair> {
     // find an origin place with only one outgoing transition
     for (origin_place_id,origin_place_info) in petri_info.places_info.iter().enumerate() {
-        let origin_place = petri_net.places.get(origin_place_id).unwrap();
         if origin_place_info.outgoing_transitions.len() == 1 {
             let transition_id = origin_place_info.outgoing_transitions.keys().next().unwrap();
             let transition = petri_net.transitions.get(*transition_id).unwrap();
-            // the outgoing transition must not have a label
+            // the transition must not have a label
             if transition.transition_label.is_none() {
-                // the outgoing transition must have a single preset place and a single postset place
+                // the transition must have a single preset place and a single postset place
                 if transition.number_of_preset_places() == 1 && transition.number_of_postset_places() == 1 {
                     let num_input_toks = transition.preset_tokens.get(&origin_place_id).unwrap();
                     let target_place_id = transition.postset_tokens.keys().next().unwrap();
                     let num_output_toks = transition.postset_tokens.get(target_place_id).unwrap();
                     // the transition must take and produce only 1 token
                     if *num_input_toks == 1 && *num_output_toks == 1 {
-                        let target_place = petri_net.places.get(*target_place_id).unwrap();
                         // the origin and target places must have the same label
-                        if origin_place == target_place {
-                            return Some(SeriesPlacesPair::new(origin_place_id, *transition_id, *target_place_id));
+                        let origin_place_label = petri_net.places.get(origin_place_id).unwrap();
+                        let target_place_label = petri_net.places.get(*target_place_id).unwrap();
+                        if origin_place_label == target_place_label {
+                            return Some(
+                                SeriesPlacesPair::new(
+                                    origin_place_id, 
+                                    *transition_id, 
+                                    *target_place_id
+                                )
+                            );
                         }
                     }
                 }

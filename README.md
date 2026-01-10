@@ -20,9 +20,22 @@ This micro library provides utilities to:
 
 The table below illustrates transition relabelling and reduction.
 
-| initial  | After relabelling "C→∅"  | After reduction  |
+| initial  | After relabelling  | After reduction  |
 |---|---|---|
-| ![initial](README_images/relabreduc/initial.png) | ![relab](README_images/relabreduc/after_relabel.png) | ![reduc](README_images/relabreduc/after_reduction.png)  |
+| ![initial](README_images/relabreduc/series_places1_1initial.png) | ![relab](README_images/relabreduc/series_places1_2relabelled.png) | ![reduc](README_images/relabreduc/series_places1_3reduced.png)  |
+| ![initial](README_images/relabreduc/series_transitions1_1initial.png) | ![relab](README_images/relabreduc/series_transitions1_2relabelled.png) | ![reduc](README_images/relabreduc/series_transitions1_3reduced.png)  |
+| ![initial](README_images/relabreduc/series_transitions2_1initial.png) | ![relab](README_images/relabreduc/series_transitions2_2relabelled.png) | ![reduc](README_images/relabreduc/series_transitions2_3reduced.png)  |
+
+
+
+## K-safeness check for Kripke structure generation
+
+When generating a Kripke structure from a Petri Net, one can specify a value "k" so that the generation yields an 
+error if the Petri Net is not k-safe i.e., there exists a reachable marking in which a place has more than k tokens.
+
+For instance, the Petri Net below is not 1-safe and 1-safe Kripke structure generation yields an error, detecting that at place p1 one can have more than 1 token.
+
+![petri](README_images/safeness/not_1safe1_test_ksafe_k1.png)
 
 
 ## Example for Kripke structure generation and model checking
