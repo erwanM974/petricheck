@@ -20,11 +20,18 @@ This micro library provides utilities to:
 
 The table below illustrates transition relabelling and reduction.
 
-| initial  | After relabelling  | After reduction  |
-|---|---|---|
-| ![initial](README_images/relabreduc/series_places1_1initial.png) | ![relab](README_images/relabreduc/series_places1_2relabelled.png) | ![reduc](README_images/relabreduc/series_places1_3reduced.png)  |
-| ![initial](README_images/relabreduc/series_transitions1_1initial.png) | ![relab](README_images/relabreduc/series_transitions1_2relabelled.png) | ![reduc](README_images/relabreduc/series_transitions1_3reduced.png)  |
-| ![initial](README_images/relabreduc/series_transitions2_1initial.png) | ![relab](README_images/relabreduc/series_transitions2_2relabelled.png) | ![reduc](README_images/relabreduc/series_transitions2_3reduced.png)  |
+| reduction | initial  | After relabelling  | After reduction  |
+|---|---|---|---|
+| series places | ![initial](README_images/relabreduc/series_places1_1initial.png) | ![relab](README_images/relabreduc/series_places1_2relabelled.png) | ![reduc](README_images/relabreduc/series_places1_3reduced.png)  |
+| series transitions | ![initial](README_images/relabreduc/series_transitions1_1initial.png) | ![relab](README_images/relabreduc/series_transitions1_2relabelled.png) | ![reduc](README_images/relabreduc/series_transitions1_3reduced.png)  |
+| series transitions | ![initial](README_images/relabreduc/series_transitions2_1initial.png) | ![relab](README_images/relabreduc/series_transitions2_2relabelled.png) | ![reduc](README_images/relabreduc/series_transitions2_3reduced.png)  |
+| self loop place | ![initial](README_images/relabreduc/self_loop_place1_1initial.png) | ![relab](README_images/relabreduc/self_loop_place1_2relabelled.png) | ![reduc](README_images/relabreduc/self_loop_place1_3reduced.png)  |
+| self loop place | ![initial](README_images/relabreduc/self_loop_place2_1initial.png) | ![relab](README_images/relabreduc/self_loop_place2_2relabelled.png) | ![reduc](README_images/relabreduc/self_loop_place2_3reduced.png)  |
+| self loop transition | ![initial](README_images/relabreduc/self_loop_transition1_1initial.png) | ![relab](README_images/relabreduc/self_loop_transition1_2relabelled.png) | ![reduc](README_images/relabreduc/self_loop_transition1_3reduced.png)  |
+| self loop transition | ![initial](README_images/relabreduc/self_loop_transition2_1initial.png) | ![relab](README_images/relabreduc/self_loop_transition2_2relabelled.png) | ![reduc](README_images/relabreduc/self_loop_transition2_3reduced.png)  |
+| parallel places | ![initial](README_images/relabreduc/parallel_places1_1initial.png) | ![relab](README_images/relabreduc/parallel_places1_2relabelled.png) | ![reduc](README_images/relabreduc/parallel_places1_3reduced.png)  |
+| parallel places | ![initial](README_images/relabreduc/parallel_places2_1initial.png) | ![relab](README_images/relabreduc/parallel_places2_2relabelled.png) | ![reduc](README_images/relabreduc/parallel_places2_3reduced.png)  |
+| parallel transitions | ![initial](README_images/relabreduc/parallel_transitions1_1initial.png) | ![relab](README_images/relabreduc/parallel_transitions1_2relabelled.png) | ![reduc](README_images/relabreduc/parallel_transitions1_3reduced.png)  |
 
 
 

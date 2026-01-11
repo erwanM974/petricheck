@@ -112,42 +112,52 @@ fn find_series_transitions_variant2(
             }
             let incoming_transition_id = place_info.incoming_transitions.keys().next().unwrap();
             let incoming_transition = petri_net.transitions.get(*incoming_transition_id).unwrap();
-            // the incoming transition must have no label and must only feed tokens to the place
-            if (incoming_transition.transition_label.is_none()) && (incoming_transition.postset_tokens.len() == 1) {
-                let outgoing_transition_id = place_info.outgoing_transitions.keys().next().unwrap();
-                let outgoing_transition = petri_net.transitions.get(*outgoing_transition_id).unwrap();
-                {
-                    let num_toks_from_t1 = incoming_transition.postset_tokens.get(&place_id).unwrap();
-                    // the outgoing transition must take the correct number of tokens from p 
-                    let num_toks_to_t2 = outgoing_transition.preset_tokens.get(&place_id).unwrap();
-                    if num_toks_from_t1 != num_toks_to_t2 {
-                        continue 'iter_places;
-                    }
-                }
-                {
-                    // the place, that will be deleted, must contain the empty label
-                    let place_label = petri_net.places.get(place_id).unwrap();
-                    if place_label.is_some() {
-                        continue 'iter_places;
-                    }
-                }
-                // if the incoming transition take tokens from places from which the outgoing transition also takes tokens
-                // then both transitions must take the same number of tokens from these places
-                for (origin_place_id,num_toks_taken_by_t1) in incoming_transition.iter_preset_tokens() {
-                    if let Some(num_toks_taken_by_t2) = outgoing_transition.preset_tokens.get(origin_place_id) {
-                        if num_toks_taken_by_t2 != num_toks_taken_by_t1 {
-                            continue 'iter_places;
-                        }
-                    }
-                }
-                return Some(
-                    SeriesTransitionsPairVariant2::new(
-                        *incoming_transition_id,
-                        place_id, 
-                        *outgoing_transition_id
-                    )
-                );
+            // the incoming transition must have no label
+            if incoming_transition.transition_label.is_some() {
+                continue 'iter_places;
             }
+            // the incoming transition must only feed tokens to the place
+            if incoming_transition.postset_tokens.len() != 1 {
+                continue 'iter_places;
+            }
+            // the outgoing and incoming transitions must not be the same
+            // otherwise we should consider the rule "elimination of self loop places"
+            let outgoing_transition_id = place_info.outgoing_transitions.keys().next().unwrap();
+            if incoming_transition_id == outgoing_transition_id {
+                continue 'iter_places;
+            }
+            let outgoing_transition = petri_net.transitions.get(*outgoing_transition_id).unwrap();
+            {
+                let num_toks_from_t1 = incoming_transition.postset_tokens.get(&place_id).unwrap();
+                // the outgoing transition must take the correct number of tokens from p 
+                let num_toks_to_t2 = outgoing_transition.preset_tokens.get(&place_id).unwrap();
+                if num_toks_from_t1 != num_toks_to_t2 {
+                    continue 'iter_places;
+                }
+            }
+            {
+                // the place, that will be deleted, must contain the empty label
+                let place_label = petri_net.places.get(place_id).unwrap();
+                if place_label.is_some() {
+                    continue 'iter_places;
+                }
+            }
+            // if the incoming transition take tokens from places from which the outgoing transition also takes tokens
+            // then both transitions must take the same number of tokens from these places
+            for (origin_place_id,num_toks_taken_by_t1) in incoming_transition.iter_preset_tokens() {
+                if let Some(num_toks_taken_by_t2) = outgoing_transition.preset_tokens.get(origin_place_id) {
+                    if num_toks_taken_by_t2 != num_toks_taken_by_t1 {
+                        continue 'iter_places;
+                    }
+                }
+            }
+            return Some(
+                SeriesTransitionsPairVariant2::new(
+                    *incoming_transition_id,
+                    place_id, 
+                    *outgoing_transition_id
+                )
+            );
         }
     }
     None 

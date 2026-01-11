@@ -18,4 +18,10 @@ pub mod reduce;
 mod fusion_series_places;
 mod fusion_series_transitions_variant1;
 mod fusion_series_transitions_variant2;
+mod elimination_self_loop_place;
+mod elimination_self_loop_transition;
+mod fusion_parallel_places;
+mod fusion_parallel_transitions;
 mod info;
+
+

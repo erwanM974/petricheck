@@ -121,32 +121,42 @@ fn find_series_places(
     petri_info : &PetriNetInfo
 ) -> Option<SeriesPlacesPair> {
     // find an origin place with only one outgoing transition
-    for (origin_place_id,origin_place_info) in petri_info.places_info.iter().enumerate() {
+    'iter_places : for (origin_place_id,origin_place_info) in petri_info.places_info.iter().enumerate() {
         if origin_place_info.outgoing_transitions.len() == 1 {
             let transition_id = origin_place_info.outgoing_transitions.keys().next().unwrap();
             let transition = petri_net.transitions.get(*transition_id).unwrap();
             // the transition must not have a label
-            if transition.transition_label.is_none() {
-                // the transition must have a single preset place and a single postset place
-                if transition.number_of_preset_places() == 1 && transition.number_of_postset_places() == 1 {
-                    let num_input_toks = transition.preset_tokens.get(&origin_place_id).unwrap();
-                    let target_place_id = transition.postset_tokens.keys().next().unwrap();
-                    let num_output_toks = transition.postset_tokens.get(target_place_id).unwrap();
-                    // the transition must take and produce only 1 token
-                    if *num_input_toks == 1 && *num_output_toks == 1 {
-                        // the origin and target places must have the same label
-                        let origin_place_label = petri_net.places.get(origin_place_id).unwrap();
-                        let target_place_label = petri_net.places.get(*target_place_id).unwrap();
-                        if origin_place_label == target_place_label {
-                            return Some(
-                                SeriesPlacesPair::new(
-                                    origin_place_id, 
-                                    *transition_id, 
-                                    *target_place_id
-                                )
-                            );
-                        }
-                    }
+            if transition.transition_label.is_some() {
+                continue 'iter_places;
+            } 
+            // the transition must have a single preset place and a single postset place 
+            if transition.number_of_preset_places() != 1 {
+                continue 'iter_places;
+            }
+            if transition.number_of_postset_places() != 1 {
+                continue 'iter_places;
+            }
+            // the target of the outgoing transition must not be the same place as its origin
+            // otherwise we should consider the rule "elimination of self loop transition"
+            let target_place_id = transition.postset_tokens.keys().next().unwrap();
+            if *target_place_id == origin_place_id {
+                continue 'iter_places;
+            }
+            // the transition must take and produce only 1 token
+            let num_input_toks = transition.preset_tokens.get(&origin_place_id).unwrap();
+            let num_output_toks = transition.postset_tokens.get(target_place_id).unwrap();
+            if *num_input_toks == 1 && *num_output_toks == 1 {
+                // the origin and target places must have the same label
+                let origin_place_label = petri_net.places.get(origin_place_id).unwrap();
+                let target_place_label = petri_net.places.get(*target_place_id).unwrap();
+                if origin_place_label == target_place_label {
+                    return Some(
+                        SeriesPlacesPair::new(
+                            origin_place_id, 
+                            *transition_id, 
+                            *target_place_id
+                        )
+                    );
                 }
             }
         }

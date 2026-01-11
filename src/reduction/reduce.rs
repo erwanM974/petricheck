@@ -19,8 +19,10 @@ use crate::reduction::info::PetriNetInfo;
 use crate::reduction::fusion_series_places::find_and_simplify_series_places;
 use crate::reduction::fusion_series_transitions_variant1::find_and_simplify_series_transitions_variant1;
 use crate::reduction::fusion_series_transitions_variant2::find_and_simplify_series_transitions_variant2;
-
-
+use crate::reduction::elimination_self_loop_place::find_and_simplify_self_loop_place;
+use crate::reduction::elimination_self_loop_transition::find_and_simplify_self_loop_transition;
+use crate::reduction::fusion_parallel_places::find_and_simplify_parallel_places;
+use crate::reduction::fusion_parallel_transitions::find_and_simplify_parallel_transitions;
 
 
 
@@ -54,6 +56,38 @@ pub fn reduce_petri_net(
             initial_markings
         ) {
             #[cfg(debug_assertions)] println!("simplify_series_places");
+            continue;
+        }
+        if find_and_simplify_self_loop_place(
+            petri_net,
+            &mut petri_info,
+            initial_markings
+        ) {
+            #[cfg(debug_assertions)] println!("simplify_self_loop_place");
+            continue;
+        }
+        if find_and_simplify_self_loop_transition(
+            petri_net,
+            &mut petri_info,
+            initial_markings
+        ) {
+            #[cfg(debug_assertions)] println!("simplify_self_loop_transition");
+            continue;
+        }
+        if find_and_simplify_parallel_places(
+            petri_net,
+            &mut petri_info,
+            initial_markings
+        ) {
+            #[cfg(debug_assertions)] println!("simplify_parallel_places");
+            continue;
+        }
+        if find_and_simplify_parallel_transitions(
+            petri_net,
+            &mut petri_info,
+            initial_markings
+        ) {
+            #[cfg(debug_assertions)] println!("simplify_parallel_transitions");
             continue;
         }
         break;

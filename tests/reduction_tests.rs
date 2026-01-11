@@ -30,7 +30,8 @@ fn tool_test_pn_reduction(
         im : Option<Marking>, 
         relabbelling : HashMap<PetriTransitionLabel, Option<Rc<PetriTransitionLabel>>>,
         expected_reduced_pn : PetriNet,
-        expected_reduced_im : Option<Marking>
+        expected_reduced_im : Option<Marking>,
+        should_not_change_without_relabel : bool
     ) {
     {
         let gv = petri_repr(&pn,&im);
@@ -42,10 +43,12 @@ fn tool_test_pn_reduction(
     }
     let mut transformed_pn = pn.clone();
     let mut transformed_im = im.clone();
-    // assert reduction on fully labelled pn does not change it
-    reduce_petri_net(&mut transformed_pn, &mut transformed_im);
-    assert_eq!(transformed_pn,pn);
-    assert_eq!(transformed_im,im);
+    if should_not_change_without_relabel {
+        // assert reduction on fully labelled pn does not change it
+        reduce_petri_net(&mut transformed_pn, &mut transformed_im);
+        assert_eq!(transformed_pn,pn);
+        assert_eq!(transformed_im,im);
+    }
     // relabel transitions
     transformed_pn.relabel_transitions(relabbelling);
     {
@@ -114,7 +117,8 @@ pub fn test_series_places1() {
         im,
         relabelling,
         expected_reduced_pn,
-        expected_reduced_im
+        expected_reduced_im,
+        true
     );
 }
 
@@ -176,7 +180,8 @@ pub fn test_series_transitions1() {
         im,
         relabelling,
         expected_reduced_pn,
-        expected_reduced_im
+        expected_reduced_im,
+        true
     );
 }
 
@@ -240,7 +245,8 @@ pub fn test_series_transitions2() {
         im,
         relabelling,
         expected_reduced_pn,
-        expected_reduced_im
+        expected_reduced_im,
+        true
     );
 }
 
@@ -249,5 +255,409 @@ pub fn test_series_transitions2() {
 
 
 
+
+
+
+#[test]
+pub fn test_self_loop_place1() {
+    let tr_a = Rc::new(PetriTransitionLabel::new("A".to_string()));
+    let pn = PetriNet::new(
+        vec![
+            None,None,None
+        ], 
+        vec![
+            PetriTransition::new(
+                Some(tr_a.clone()),
+                hash_map! {0=>1,1=>1},
+                hash_map! {1=>1,2=>1}
+            )
+        ]
+    );
+    let im = Some(Marking::new(btree_map! {0=>1,1=>1}));
+    let relabelling = hash_map! {};
+    let expected_reduced_pn = PetriNet::new(
+        vec![
+            None,None
+        ], 
+        vec![
+            PetriTransition::new(
+                Some(tr_a.clone()),
+                hash_map! {0=>1},
+                hash_map! {1=>1}
+            )
+        ]
+    );
+    let expected_reduced_im = Some(Marking::new(btree_map! {0=>1}));
+    tool_test_pn_reduction(
+        "self_loop_place1",
+        pn,
+        im,
+        relabelling,
+        expected_reduced_pn,
+        expected_reduced_im,
+        false
+    );
+}
+
+
+
+
+
+#[test]
+pub fn test_self_loop_place2() {
+    let tr_a = Rc::new(PetriTransitionLabel::new("A".to_string()));
+    let tr_b = Rc::new(PetriTransitionLabel::new("B".to_string()));
+    let pn = PetriNet::new(
+        vec![
+            None,None,None
+        ], 
+        vec![
+            PetriTransition::new(
+                Some(tr_a.clone()),
+                hash_map! {0=>1},
+                hash_map! {0=>1,1=>1}
+            ),
+            PetriTransition::new(
+                Some(tr_b.clone()),
+                hash_map! {0=>1},
+                hash_map! {0=>1,2=>1}
+            ),
+        ]
+    );
+    let im = Some(Marking::new(btree_map! {0=>1}));
+    let relabelling = hash_map! {};
+    let expected_reduced_pn = PetriNet::new(
+        vec![
+            None,None
+        ], 
+        vec![
+            PetriTransition::new(
+                Some(tr_a.clone()),
+                hash_map! {},
+                hash_map! {0=>1}
+            ),
+            PetriTransition::new(
+                Some(tr_b.clone()),
+                hash_map! {},
+                hash_map! {1=>1}
+            ),
+        ]
+    );
+    let expected_reduced_im = Some(Marking::new(btree_map! {}));
+    tool_test_pn_reduction(
+        "self_loop_place2",
+        pn,
+        im,
+        relabelling,
+        expected_reduced_pn,
+        expected_reduced_im,
+        false
+    );
+}
+
+
+
+
+
+
+
+
+#[test]
+pub fn test_self_loop_transition1() {
+    let tr_a = Rc::new(PetriTransitionLabel::new("A".to_string()));
+    let tr_b = Rc::new(PetriTransitionLabel::new("B".to_string()));
+    let pn = PetriNet::new(
+        vec![
+            None,None
+        ], 
+        vec![
+            PetriTransition::new(
+                Some(tr_a.clone()),
+                hash_map! {0=>1},
+                hash_map! {1=>1}
+            ),
+            PetriTransition::new(
+                Some(tr_b.clone()),
+                hash_map! {1=>1},
+                hash_map! {1=>1}
+            ),
+        ]
+    );
+    let im = Some(Marking::new(btree_map! {0=>1}));
+    let relabelling = hash_map! {(*tr_b).clone()=>None};
+    let expected_reduced_pn = PetriNet::new(
+        vec![
+            None,None
+        ], 
+        vec![
+            PetriTransition::new(
+                Some(tr_a.clone()),
+                hash_map! {0=>1},
+                hash_map! {1=>1}
+            )
+        ]
+    );
+    let expected_reduced_im = Some(Marking::new(btree_map! {0=>1}));
+    tool_test_pn_reduction(
+        "self_loop_transition1",
+        pn,
+        im,
+        relabelling,
+        expected_reduced_pn,
+        expected_reduced_im,
+        true
+    );
+}
+
+
+
+
+#[test]
+pub fn test_self_loop_transition2() {
+    let tr_a = Rc::new(PetriTransitionLabel::new("A".to_string()));
+    let tr_b = Rc::new(PetriTransitionLabel::new("B".to_string()));
+    let tr_c = Rc::new(PetriTransitionLabel::new("C".to_string()));
+    let pn = PetriNet::new(
+        vec![
+            None,None
+        ], 
+        vec![
+            PetriTransition::new(
+                Some(tr_a.clone()),
+                hash_map! {},
+                hash_map! {0=>1}
+            ),
+            PetriTransition::new(
+                Some(tr_b.clone()),
+                hash_map! {},
+                hash_map! {1=>1}
+            ),
+            PetriTransition::new(
+                Some(tr_c.clone()),
+                hash_map! {0=>1,1=>1},
+                hash_map! {0=>1,1=>1}
+            ),
+        ]
+    );
+    let im = Some(Marking::new(btree_map! {}));
+    let relabelling = hash_map! {(*tr_c).clone()=>None};
+    let expected_reduced_pn = PetriNet::new(
+        vec![
+            None,None
+        ], 
+        vec![
+            PetriTransition::new(
+                Some(tr_a.clone()),
+                hash_map! {},
+                hash_map! {0=>1}
+            ),
+            PetriTransition::new(
+                Some(tr_b.clone()),
+                hash_map! {},
+                hash_map! {1=>1}
+            )
+        ]
+    );
+    let expected_reduced_im = Some(Marking::new(btree_map! {}));
+    tool_test_pn_reduction(
+        "self_loop_transition2",
+        pn,
+        im,
+        relabelling,
+        expected_reduced_pn,
+        expected_reduced_im,
+        true
+    );
+}
+
+
+
+#[test]
+pub fn test_parallel_places1() {
+    let tr_a = Rc::new(PetriTransitionLabel::new("A".to_string()));
+    let tr_b = Rc::new(PetriTransitionLabel::new("B".to_string()));
+    let pn = PetriNet::new(
+        vec![
+            None,None,None,None
+        ], 
+        vec![
+            PetriTransition::new(
+                Some(tr_a.clone()),
+                hash_map! {0=>1},
+                hash_map! {1=>1,2=>1}
+            ),
+            PetriTransition::new(
+                Some(tr_b.clone()),
+                hash_map! {1=>1,2=>1},
+                hash_map! {3=>1}
+            ),
+        ]
+    );
+    let im = Some(Marking::new(btree_map! {0=>1}));
+    let relabelling = hash_map! {};
+    let expected_reduced_pn = PetriNet::new(
+        vec![
+            None,None,None
+        ], 
+        vec![
+            PetriTransition::new(
+                Some(tr_a.clone()),
+                hash_map! {0=>1},
+                hash_map! {1=>1}
+            ),
+            PetriTransition::new(
+                Some(tr_b.clone()),
+                hash_map! {1=>1},
+                hash_map! {2=>1}
+            )
+        ]
+    );
+    let expected_reduced_im = Some(Marking::new(btree_map! {0=>1}));
+    tool_test_pn_reduction(
+        "parallel_places1",
+        pn,
+        im,
+        relabelling,
+        expected_reduced_pn,
+        expected_reduced_im,
+        false
+    );
+}
+
+
+
+#[test]
+pub fn test_parallel_places2() {
+    let tr_a = Rc::new(PetriTransitionLabel::new("A".to_string()));
+    let tr_b = Rc::new(PetriTransitionLabel::new("B".to_string()));
+    let tr_c = Rc::new(PetriTransitionLabel::new("C".to_string()));
+    let pn = PetriNet::new(
+        vec![
+            None,None,None
+        ], 
+        vec![
+            PetriTransition::new(
+                Some(tr_a.clone()),
+                hash_map! {0=>1},
+                hash_map! {1=>1,2=>1}
+            ),
+            PetriTransition::new(
+                Some(tr_b.clone()),
+                hash_map! {0=>1},
+                hash_map! {1=>1,2=>1}
+            ),
+            PetriTransition::new(
+                Some(tr_c.clone()),
+                hash_map! {1=>1,2=>1},
+                hash_map! {}
+            ),
+        ]
+    );
+    let im = Some(Marking::new(btree_map! {0=>1}));
+    let relabelling = hash_map! {};
+    let expected_reduced_pn = PetriNet::new(
+        vec![
+            None,None
+        ], 
+        vec![
+            PetriTransition::new(
+                Some(tr_a.clone()),
+                hash_map! {0=>1},
+                hash_map! {1=>1}
+            ),
+            PetriTransition::new(
+                Some(tr_b.clone()),
+                hash_map! {0=>1},
+                hash_map! {1=>1}
+            ),
+            PetriTransition::new(
+                Some(tr_c.clone()),
+                hash_map! {1=>1},
+                hash_map! {}
+            )
+        ]
+    );
+    let expected_reduced_im = Some(Marking::new(btree_map! {0=>1}));
+    tool_test_pn_reduction(
+        "parallel_places2",
+        pn,
+        im,
+        relabelling,
+        expected_reduced_pn,
+        expected_reduced_im,
+        false
+    );
+}
+
+
+
+
+#[test]
+pub fn test_parallel_transitions1() {
+    let tr_a = Rc::new(PetriTransitionLabel::new("A".to_string()));
+    let tr_b = Rc::new(PetriTransitionLabel::new("B".to_string()));
+    let tr_c = Rc::new(PetriTransitionLabel::new("C".to_string()));
+    let pn = PetriNet::new(
+        vec![
+            None,None,None
+        ], 
+        vec![
+            PetriTransition::new(
+                Some(tr_a.clone()),
+                hash_map! {0=>1},
+                hash_map! {1=>1,2=>1}
+            ),
+            PetriTransition::new(
+                Some(tr_a.clone()),
+                hash_map! {0=>1},
+                hash_map! {1=>1,2=>1}
+            ),
+            PetriTransition::new(
+                Some(tr_b.clone()),
+                hash_map! {1=>1},
+                hash_map! {}
+            ),
+            PetriTransition::new(
+                Some(tr_c.clone()),
+                hash_map! {2=>1},
+                hash_map! {}
+            ),
+        ]
+    );
+    let im = Some(Marking::new(btree_map! {0=>1}));
+    let relabelling = hash_map! {};
+    let expected_reduced_pn = PetriNet::new(
+        vec![
+            None,None,None
+        ], 
+        vec![
+            PetriTransition::new(
+                Some(tr_a.clone()),
+                hash_map! {0=>1},
+                hash_map! {1=>1,2=>1}
+            ),
+            PetriTransition::new(
+                Some(tr_b.clone()),
+                hash_map! {1=>1},
+                hash_map! {}
+            ),
+            PetriTransition::new(
+                Some(tr_c.clone()),
+                hash_map! {2=>1},
+                hash_map! {}
+            ),
+        ]
+    );
+    let expected_reduced_im = Some(Marking::new(btree_map! {0=>1}));
+    tool_test_pn_reduction(
+        "parallel_transitions1",
+        pn,
+        im,
+        relabelling,
+        expected_reduced_pn,
+        expected_reduced_im,
+        false
+    );
+}
 
 
