@@ -33,7 +33,7 @@ impl SelfLoopTransition {
 pub fn find_and_simplify_self_loop_transition(
     petri_net : &mut PetriNet,
     petri_info : &mut PetriNetInfo,
-    initial_markings : &mut Option<Marking>
+    _initial_markings : &mut Option<Marking>
 ) -> bool {
     if let Some(self_loop_transition) = find_self_loop_transition(petri_net) {
         // we remove the self_loop_transition

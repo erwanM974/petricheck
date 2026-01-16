@@ -21,6 +21,7 @@ use crate::{model::{marking::Marking, net::PetriNet}, reduction::info::PetriNetI
 
 
 pub struct ParallelTransitionsPair {
+    #[allow(unused)] 
     pub tx1_id : usize,
     pub tx2_id : usize
 }
@@ -37,7 +38,7 @@ impl ParallelTransitionsPair {
 pub fn find_and_simplify_parallel_transitions(
     petri_net : &mut PetriNet,
     petri_info : &mut PetriNetInfo,
-    initial_markings : &mut Option<Marking>
+    _initial_markings : &mut Option<Marking>
 ) -> bool {
     if let Some(parallel_transitions) = find_parallel_transitions(petri_net) {
         // we simply delete any of the two transitions (let's delete the second)

@@ -16,7 +16,7 @@ limitations under the License.
 
 
 
-use std::{collections::HashMap, rc::Rc};
+use std::{collections::{BTreeMap, HashMap}, rc::Rc};
 
 use citreelo::{ctl::{BinaryCTLOperator, CTLFormula, CTLFormulaLeaf}};
 
@@ -79,21 +79,8 @@ impl BuiltinPetriCtlParser {
         for transition in &petri_net.transitions {
             if let Some(transition_label_ref) = &transition.transition_label {
                 let tr_firing_condition = {
-                    let mut ctl = CTLFormula::Leaf(CTLFormulaLeaf::True);
-                    for (place_id,req_num_toks) in transition.iter_preset_tokens() {
-                        debug_assert!(*req_num_toks > 0);
-                        let atom = BuiltinPetriAtomicProposition::TokensCount(
-                            TokensCountRelation::GreaterOrEqual, 
-                            TokensCountAtom::NumberOfTokensInPlace(*place_id), 
-                            TokensCountAtom::RawInteger(*req_num_toks)
-                        );
-                        ctl = CTLFormula::Binary(
-                            BinaryCTLOperator::And, 
-                            Box::new(ctl), 
-                            Box::new(CTLFormula::Leaf(CTLFormulaLeaf::AtomicProp(atom)))
-                        );
-                    }
-                    ctl
+                    let mut preset_tokens = transition.preset_tokens.iter().map(|(x,y)|(*x,*y)).collect();
+                    preset_tokens_to_firing_condition(&mut preset_tokens)
                 };
                 // ***
                 if let Some(ctl) = transition_label_to_firing_condition.remove(&transition_label_ref.label) {
@@ -123,3 +110,32 @@ impl BuiltinPetriCtlParser {
 }
 
 
+fn preset_tokens_to_firing_condition(
+    preset_tokens    : &mut BTreeMap<usize,u32>
+) -> CTLFormula<BuiltinPetriAtomicProposition> {
+    if preset_tokens.is_empty() {
+        return CTLFormula::Leaf(CTLFormulaLeaf::True);
+    }
+    if preset_tokens.len() == 1 {
+        let (place_id,req_num_toks) = preset_tokens.iter().next().unwrap();
+        let atom = BuiltinPetriAtomicProposition::TokensCount(
+            TokensCountRelation::GreaterOrEqual, 
+            TokensCountAtom::NumberOfTokensInPlace(*place_id), 
+            TokensCountAtom::RawInteger(*req_num_toks)
+        );
+        return CTLFormula::Leaf(CTLFormulaLeaf::AtomicProp(atom));
+    }
+    let place_id = *preset_tokens.keys().next().unwrap();
+    let req_num_toks = preset_tokens.remove(&place_id).unwrap();
+    let atom = BuiltinPetriAtomicProposition::TokensCount(
+        TokensCountRelation::GreaterOrEqual, 
+        TokensCountAtom::NumberOfTokensInPlace(place_id), 
+        TokensCountAtom::RawInteger(req_num_toks)
+    );
+    let sub_phi = preset_tokens_to_firing_condition(preset_tokens);
+    CTLFormula::Binary(
+        BinaryCTLOperator::And, 
+        Box::new(CTLFormula::Leaf(CTLFormulaLeaf::AtomicProp(atom))), 
+        Box::new(sub_phi)
+    )
+}

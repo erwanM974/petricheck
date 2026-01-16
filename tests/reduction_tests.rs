@@ -28,16 +28,18 @@ fn tool_test_pn_reduction(
         title : &str, 
         pn : PetriNet, 
         im : Option<Marking>, 
-        relabbelling : HashMap<PetriTransitionLabel, Option<Rc<PetriTransitionLabel>>>,
+        relabelling : HashMap<PetriTransitionLabel, Option<Rc<PetriTransitionLabel>>>,
         expected_reduced_pn : PetriNet,
         expected_reduced_im : Option<Marking>,
         should_not_change_without_relabel : bool
     ) {
+    let folder_name = "test_output_reduction";
+    let _ = std::fs::create_dir(folder_name);
     {
         let gv = petri_repr(&pn,&im);
         gv.print_dot(
             &[".".to_string()], 
-            &format!("{}_1initial", title), 
+            &format!("{}/{}_1initial", folder_name, title), 
             &GraphVizOutputFormat::png
         ).unwrap();
     }
@@ -50,12 +52,12 @@ fn tool_test_pn_reduction(
         assert_eq!(transformed_im,im);
     }
     // relabel transitions
-    transformed_pn.relabel_transitions(relabbelling);
+    transformed_pn.relabel_transitions(relabelling);
     {
         let gv = petri_repr(&transformed_pn,&transformed_im);
         gv.print_dot(
             &[".".to_string()], 
-            &format!("{}_2relabelled", title), 
+            &format!("{}/{}_2relabelled", folder_name, title), 
             &GraphVizOutputFormat::png
         ).unwrap();
     }
@@ -65,7 +67,7 @@ fn tool_test_pn_reduction(
         let gv = petri_repr(&transformed_pn,&transformed_im);
         gv.print_dot(
             &[".".to_string()], 
-            &format!("{}_3reduced", title), 
+            &format!("{}/{}_3reduced", folder_name, title), 
             &GraphVizOutputFormat::png
         ).unwrap();
     }

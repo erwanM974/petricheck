@@ -115,6 +115,7 @@ pub fn find_and_simplify_series_places(
 /// - t is the only transition which accepts tokens from p1 
 /// - the label of t is the empty label
 /// - the places p1 and p2 contain the same label
+/// 
 /// see https://ieeexplore.ieee.org/document/24143 
 fn find_series_places(
     petri_net : &PetriNet, 
